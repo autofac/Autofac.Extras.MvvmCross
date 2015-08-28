@@ -66,7 +66,6 @@ namespace Autofac.Extras.Tests.MvvmCross
         {
             Assert.That(() => _provider.Resolve<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
             Assert.That(() => _provider.Create<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
-            Assert.That(() => _provider.IoCConstruct<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
         }
 
         [Test]
@@ -228,12 +227,32 @@ namespace Autofac.Extras.Tests.MvvmCross
             Assert.IsNotNull(obj);
         }
 
+        [Test]
+        public void IgnoresPropertiesByDefault()
+        {
+            // Arrange
+            Mvx.RegisterType<IInterface, Concrete>();
+
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.IsNotNull(obj);
+            Assert.IsNull(obj.Dependency);
+        }
+
+
         private interface IInterface
         {
         }
 
         private class Concrete : IInterface
         {
+        }
+
+        private class HasDependantProperty
+        {
+            public IInterface Dependency { get; set; }
         }
     }
 }

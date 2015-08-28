@@ -48,16 +48,32 @@ namespace Autofac.Extras.MvvmCross
         /// <param name="container">
         /// The container from which dependencies should be resolved.
         /// </param>
+        /// <param name="propertyInjectionEnabled"></param>
         /// <exception cref="System.ArgumentNullException">
         /// Thrown if <paramref name="container"/> is <see langword="null"/>.
         /// </exception>
-        public AutofacMvxIocProvider(IContainer container)
+        public AutofacMvxIocProvider(IContainer container, bool propertyInjectionEnabled)
         {
             if (container == null)
                 throw new ArgumentNullException("container");
 
             _container = container;
+            PropertyInjectionEnabled = propertyInjectionEnabled;
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AutofacMvxIocProvider"/> class.
+        /// </summary>
+        /// <param name="container"></param>
+        public AutofacMvxIocProvider(IContainer container)
+            : this(container, false)
+        {
+        }
+
+        /// <summary>
+        /// Gets/sets whether propertyinjection is enabled by default
+        /// </summary>
+        private bool PropertyInjectionEnabled { get; set; }
 
         /// <summary>
         /// Registers an action to occur when a specific type is registered.
@@ -321,7 +337,10 @@ namespace Autofac.Extras.MvvmCross
                 throw new ArgumentNullException("theObject");
 
             var cb = new ContainerBuilder();
-            cb.RegisterInstance(theObject).As(tInterface).AsSelf().SingleInstance();
+            var x = cb.RegisterInstance(theObject).As(tInterface).AsSelf().SingleInstance();
+            if (PropertyInjectionEnabled)
+                x.PropertiesAutowired();
+
             cb.Update(_container);
         }
 
@@ -349,8 +368,15 @@ namespace Autofac.Extras.MvvmCross
             var cb = new ContainerBuilder();
 
             var type = theConstructor.GetMethodInfo().ReturnType;
-            cb.RegisterType(type).As(tInterface).AsSelf().SingleInstance();
-            cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
+            var x = cb.RegisterType(type).As(tInterface).AsSelf().SingleInstance();
+            if (PropertyInjectionEnabled)
+                x.PropertiesAutowired();
+
+            var y = cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
+            if (PropertyInjectionEnabled)
+                y.PropertiesAutowired();
+
+
             cb.Update(_container);
         }
 
@@ -396,7 +422,10 @@ namespace Autofac.Extras.MvvmCross
                 throw new ArgumentNullException("constructor");
 
             var cb = new ContainerBuilder();
-            cb.Register(c => constructor()).AsSelf();
+            var x = cb.Register(c => constructor()).AsSelf();
+            if (PropertyInjectionEnabled)
+                x.PropertiesAutowired();
+
             cb.Update(_container);
         }
 
@@ -422,7 +451,10 @@ namespace Autofac.Extras.MvvmCross
                 throw new ArgumentNullException("constructor");
 
             var cb = new ContainerBuilder();
-            cb.Register(c => constructor()).As(t).AsSelf();
+            var x = cb.Register(c => constructor()).As(t).AsSelf();
+            if (PropertyInjectionEnabled)
+                x.PropertiesAutowired();
+
             cb.Update(_container);
         }
 
@@ -454,7 +486,10 @@ namespace Autofac.Extras.MvvmCross
                 throw new ArgumentNullException("tTo");
 
             var cb = new ContainerBuilder();
-            cb.RegisterType(tTo).As(tFrom).AsSelf();
+            var x = cb.RegisterType(tTo).As(tFrom).AsSelf();
+            if (PropertyInjectionEnabled)
+                x.PropertiesAutowired();
+
             cb.Update(_container);
         }
 
