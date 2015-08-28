@@ -26,6 +26,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using Autofac.Core;
 using Autofac.Core.Lifetime;
 using Autofac.Core.Registration;
@@ -259,6 +260,9 @@ namespace Autofac.Extras.MvvmCross
         /// </exception>
         public object IoCConstruct(Type type)
         {
+            if (!_container.IsRegistered(type))
+                RegisterType(type, type);
+
             return Resolve(type);
         }
 
@@ -343,6 +347,9 @@ namespace Autofac.Extras.MvvmCross
                 throw new ArgumentNullException("theConstructor");
 
             var cb = new ContainerBuilder();
+
+            var type = theConstructor.GetMethodInfo().ReturnType;
+            cb.RegisterType(type).As(tInterface).AsSelf().SingleInstance();
             cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
             cb.Update(_container);
         }

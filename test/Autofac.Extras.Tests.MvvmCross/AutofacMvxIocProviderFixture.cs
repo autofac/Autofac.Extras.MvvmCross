@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Configuration;
 using Autofac.Extras.MvvmCross;
 using Autofac.Core.Registration;
 using Autofac.Core;
+using Cirrious.CrossCore;
 using NUnit.Framework;
 
 namespace Autofac.Extras.Tests.MvvmCross
@@ -206,6 +208,24 @@ namespace Autofac.Extras.Tests.MvvmCross
         {
             Assert.That(() => _provider.CallbackWhenRegistered(null, () => new object()), Throws.TypeOf<ArgumentNullException>());
             Assert.That(() => _provider.CallbackWhenRegistered(typeof(object), null), Throws.TypeOf<ArgumentNullException>());
+        }
+
+        [Test]
+        public void SupportsSingletonRegistrationWithMvxIoCConstructFunc()
+        {
+            _provider.RegisterSingleton<IInterface>(Mvx.IocConstruct<Concrete>);
+
+            var concrete = _provider.Resolve<IInterface>();
+
+            Assert.IsNotNull(concrete);
+        }
+
+        [Test]
+        public void SupportsMvxIocConstructWithoutRegistration()
+        {
+            var obj = Mvx.IocConstruct<Concrete>();
+
+            Assert.IsNotNull(obj);
         }
 
         private interface IInterface
