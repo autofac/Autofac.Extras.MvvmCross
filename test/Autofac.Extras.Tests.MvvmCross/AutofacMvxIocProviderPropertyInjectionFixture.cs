@@ -46,7 +46,6 @@ namespace Autofac.Extras.Tests.MvvmCross
             Assert.IsNotNull(obj.MarkedDependency);
         }
 
-
         [Test]
         public void InjectsOnlyMarkedPropertiesIfEnabled()
         {
@@ -57,6 +56,24 @@ namespace Autofac.Extras.Tests.MvvmCross
 
             // Act
             var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.IsNotNull(obj);
+            Assert.IsNull(obj.Dependency);
+            Assert.IsNotNull(obj.MarkedDependency);
+        }
+
+        [Test]
+        public void InjectsOnlyMarkedPropertiesIfEnabled_Lazy()
+        {
+            // Arrange
+            _provider = new AutofacMvxIocProvider(_container, new MvxPropertyInjectorOptions() { InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties });
+            Mvx.RegisterType<IInterface, Concrete>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+            Mvx.RegisterSingleton<IHasDependantProperty>(Mvx.IocConstruct<HasDependantProperty>);
+
+            // Act
+            var obj = Mvx.Resolve<IHasDependantProperty>();
 
             // Assert
             Assert.IsNotNull(obj);
@@ -84,6 +101,30 @@ namespace Autofac.Extras.Tests.MvvmCross
             Assert.IsNotNull(obj.Dependency);
             Assert.IsNotNull(obj.MarkedDependency);
         }
+
+
+        [Test]
+        public void InjectsOnlyMarkedProperties_WithCustomAttribute_IfEnabled_Lazy()
+        {
+            // Arrange
+            _provider = new AutofacMvxIocProvider(_container, new AutoFacPropertyInjectionOptions()
+            {
+                InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties,
+                CustomInjectorAttributeType = typeof(MyInjectionAttribute),
+            });
+            Mvx.RegisterType<IInterface, Concrete>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+            Mvx.RegisterSingleton<IHasDependantProperty>(Mvx.IocConstruct<HasDependantProperty>);
+
+            // Act
+            var obj = Mvx.Resolve<IHasDependantProperty>();
+
+            // Assert
+            Assert.IsNotNull(obj);
+            Assert.IsNotNull(obj.Dependency);
+            Assert.IsNotNull(obj.MarkedDependency);
+        }
+
 
         [Test]
         public void IgnoresNonResolvableProperty()
@@ -147,7 +188,7 @@ namespace Autofac.Extras.Tests.MvvmCross
             
         }
 
-        private class HasDependantProperty
+        private class HasDependantProperty : IHasDependantProperty
         {
             [MyInjectionAttribute]
             public IInterface Dependency { get; set; }
@@ -155,5 +196,11 @@ namespace Autofac.Extras.Tests.MvvmCross
             [MvxInject]
             public IInterface2 MarkedDependency { get; set; }
         }
+        private interface IHasDependantProperty
+        {
+            IInterface Dependency { get; set; }
+            IInterface2 MarkedDependency { get; set; }
+        }
     }
+
 }
