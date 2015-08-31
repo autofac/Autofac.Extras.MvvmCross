@@ -27,10 +27,13 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Autofac.Builder;
 using Autofac.Core;
 using Autofac.Core.Lifetime;
 using Autofac.Core.Registration;
+using Cirrious.CrossCore;
 using Cirrious.CrossCore.Core;
+using Cirrious.CrossCore.Exceptions;
 using Cirrious.CrossCore.IoC;
 
 namespace Autofac.Extras.MvvmCross
@@ -41,6 +44,7 @@ namespace Autofac.Extras.MvvmCross
     public class AutofacMvxIocProvider : MvxSingleton<IMvxIoCProvider>, IMvxIoCProvider
     {
         readonly IContainer _container;
+        private Type _customInjectorAttributeType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutofacMvxIocProvider"/> class.
@@ -48,17 +52,22 @@ namespace Autofac.Extras.MvvmCross
         /// <param name="container">
         /// The container from which dependencies should be resolved.
         /// </param>
-        /// <param name="propertyInjectionEnabled"></param>
+        /// <param name="propertyInjectionOptions"></param>
         /// <exception cref="System.ArgumentNullException">
         /// Thrown if <paramref name="container"/> is <see langword="null"/>.
         /// </exception>
-        public AutofacMvxIocProvider(IContainer container, bool propertyInjectionEnabled)
+        public AutofacMvxIocProvider(IContainer container, IMvxPropertyInjectorOptions propertyInjectionOptions)
         {
+            PropertyInjectionOptions = propertyInjectionOptions;
             if (container == null)
                 throw new ArgumentNullException("container");
 
             _container = container;
-            PropertyInjectionEnabled = propertyInjectionEnabled;
+            PropertyInjectionEnabled = propertyInjectionOptions.InjectIntoProperties != MvxPropertyInjection.None;
+
+            var autofacOptions = propertyInjectionOptions as IAutofacPropertyInjectorOptions;
+            if (autofacOptions != null && autofacOptions.CustomInjectorAttributeType.IsAssignableTo<Attribute>())
+                _customInjectorAttributeType = autofacOptions.CustomInjectorAttributeType;
         }
 
         /// <summary>
@@ -66,14 +75,19 @@ namespace Autofac.Extras.MvvmCross
         /// </summary>
         /// <param name="container"></param>
         public AutofacMvxIocProvider(IContainer container)
-            : this(container, false)
+            : this(container, new MvxPropertyInjectorOptions())
         {
         }
 
         /// <summary>
         /// Gets/sets whether propertyinjection is enabled by default
         /// </summary>
-        private bool PropertyInjectionEnabled { get; set; }
+        public bool PropertyInjectionEnabled { get; private set; }
+
+        /// <summary>
+        /// gets the propertyinjection options
+        /// </summary>
+        public IMvxPropertyInjectorOptions PropertyInjectionOptions { get; private set; }
 
         /// <summary>
         /// Registers an action to occur when a specific type is registered.
@@ -339,7 +353,7 @@ namespace Autofac.Extras.MvvmCross
             var cb = new ContainerBuilder();
             var x = cb.RegisterInstance(theObject).As(tInterface).AsSelf().SingleInstance();
             if (PropertyInjectionEnabled)
-                x.PropertiesAutowired();
+                EnablePropertyInjection(tInterface, x);
 
             cb.Update(_container);
         }
@@ -370,11 +384,11 @@ namespace Autofac.Extras.MvvmCross
             var type = theConstructor.GetMethodInfo().ReturnType;
             var x = cb.RegisterType(type).As(tInterface).AsSelf().SingleInstance();
             if (PropertyInjectionEnabled)
-                x.PropertiesAutowired();
+                EnablePropertyInjection(tInterface, x);
 
             var y = cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
             if (PropertyInjectionEnabled)
-                y.PropertiesAutowired();
+                EnablePropertyInjection(tInterface, y);
 
 
             cb.Update(_container);
@@ -424,7 +438,7 @@ namespace Autofac.Extras.MvvmCross
             var cb = new ContainerBuilder();
             var x = cb.Register(c => constructor()).AsSelf();
             if (PropertyInjectionEnabled)
-                x.PropertiesAutowired();
+                EnablePropertyInjection(typeof(TInterface), x);
 
             cb.Update(_container);
         }
@@ -453,7 +467,7 @@ namespace Autofac.Extras.MvvmCross
             var cb = new ContainerBuilder();
             var x = cb.Register(c => constructor()).As(t).AsSelf();
             if (PropertyInjectionEnabled)
-                x.PropertiesAutowired();
+                EnablePropertyInjection(t, x);
 
             cb.Update(_container);
         }
@@ -488,7 +502,7 @@ namespace Autofac.Extras.MvvmCross
             var cb = new ContainerBuilder();
             var x = cb.RegisterType(tTo).As(tFrom).AsSelf();
             if (PropertyInjectionEnabled)
-                x.PropertiesAutowired();
+                EnablePropertyInjection(tFrom, x);
 
             cb.Update(_container);
         }
@@ -524,7 +538,17 @@ namespace Autofac.Extras.MvvmCross
             if (type == null)
                 throw new ArgumentNullException("type");
 
-            return _container.Resolve(type);
+            try
+            {
+                return _container.Resolve(type);
+            }
+            catch (DependencyResolutionException ex)
+            {
+                // throw MvxIoCResolveException
+                if (ex.InnerException is MvxIoCResolveException)
+                    throw ex.InnerException;
+                throw;
+            }
         }
 
         /// <summary>
@@ -563,5 +587,59 @@ namespace Autofac.Extras.MvvmCross
 
             return _container.TryResolve(type, out resolved);
         }
+
+        private void EnablePropertyInjection(Type type, IRegistrationBuilder<object, IConcreteActivatorData, SingleRegistrationStyle> registrationBuilder)
+        {
+            var injectableProperties = type
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
+                .Where(p => p.PropertyType.GetTypeInfo().IsInterface)
+                .Where(p => p.IsConventional())
+                .Where(p => p.CanWrite);
+
+            switch (PropertyInjectionOptions.InjectIntoProperties)
+            {
+                case MvxPropertyInjection.MvxInjectInterfaceProperties:
+                    if(_customInjectorAttributeType != null)
+                        injectableProperties = injectableProperties
+                            .Where(p => p.GetCustomAttributes(typeof(MvxInjectAttribute), false).Any() ||
+                                        p.GetCustomAttributes(_customInjectorAttributeType, false).Any());
+                    else
+                        injectableProperties = injectableProperties
+                            .Where(p => p.GetCustomAttributes(typeof(MvxInjectAttribute), false).Any());
+                    break;
+                case MvxPropertyInjection.AllInterfaceProperties:
+                    break;
+                case MvxPropertyInjection.None:
+                    Mvx.Error("Internal error - should not call FindInjectableProperties with MvxPropertyInjection.None");
+                    injectableProperties = new PropertyInfo[0];
+                    break;
+                default:
+                    throw new MvxException("unknown option for InjectIntoProperties {0}", PropertyInjectionOptions.InjectIntoProperties);
+            }
+
+            foreach (var prop in injectableProperties)
+            {
+                var property = prop;
+                registrationBuilder.OnActivating(e =>
+                {
+                    object dependency = null;
+                    try
+                    {
+                        dependency = e.Context.Resolve(property.PropertyType);
+                    }
+                    catch (Exception x)
+                    {
+                        if (PropertyInjectionOptions.ThrowIfPropertyInjectionFails)
+                        {
+                            throw new MvxIoCResolveException(x, "Could not resolve property {0} of type {1} on {2}", property.Name, property.PropertyType.FullName, type.FullName);
+                        }
+                    }
+
+                    if(dependency != null)
+                        property.SetValue(e.Instance, dependency);
+                });
+            }
+        }
+
     }
 }

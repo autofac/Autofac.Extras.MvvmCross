@@ -4,6 +4,8 @@ using Autofac.Extras.MvvmCross;
 using Autofac.Core.Registration;
 using Autofac.Core;
 using Cirrious.CrossCore;
+using Cirrious.CrossCore.Exceptions;
+using Cirrious.CrossCore.IoC;
 using NUnit.Framework;
 
 namespace Autofac.Extras.Tests.MvvmCross
@@ -18,7 +20,6 @@ namespace Autofac.Extras.Tests.MvvmCross
         public void SetUp()
         {
             _container = new ContainerBuilder().Build();
-            _provider = new AutofacMvxIocProvider(_container, true);
         }
 
         [TearDown]
@@ -32,7 +33,9 @@ namespace Autofac.Extras.Tests.MvvmCross
         public void InjectsPropertiesIfEnabled()
         {
             // Arrange
+            _provider = new AutofacMvxIocProvider(_container, new MvxPropertyInjectorOptions() { InjectIntoProperties = MvxPropertyInjection.AllInterfaceProperties});
             Mvx.RegisterType<IInterface, Concrete>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
             
             // Act
             var obj = Mvx.IocConstruct<HasDependantProperty>();
@@ -40,6 +43,86 @@ namespace Autofac.Extras.Tests.MvvmCross
             // Assert
             Assert.IsNotNull(obj);
             Assert.IsNotNull(obj.Dependency);
+            Assert.IsNotNull(obj.MarkedDependency);
+        }
+
+
+        [Test]
+        public void InjectsOnlyMarkedPropertiesIfEnabled()
+        {
+            // Arrange
+            _provider = new AutofacMvxIocProvider(_container, new MvxPropertyInjectorOptions() { InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties });
+            Mvx.RegisterType<IInterface, Concrete>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.IsNotNull(obj);
+            Assert.IsNull(obj.Dependency);
+            Assert.IsNotNull(obj.MarkedDependency);
+        }
+
+
+        [Test]
+        public void InjectsOnlyMarkedProperties_WithCustomAttribute_IfEnabled()
+        {
+            // Arrange
+            _provider = new AutofacMvxIocProvider(_container, new AutoFacPropertyInjectionOptions()
+            {
+                InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties,
+                CustomInjectorAttributeType = typeof(MyInjectionAttribute),
+            });
+            Mvx.RegisterType<IInterface, Concrete>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.IsNotNull(obj);
+            Assert.IsNotNull(obj.Dependency);
+            Assert.IsNotNull(obj.MarkedDependency);
+        }
+
+        [Test]
+        public void IgnoresNonResolvableProperty()
+        {
+            // Arrange
+            _provider = new AutofacMvxIocProvider(_container, new MvxPropertyInjectorOptions() { InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties });
+            
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.IsNotNull(obj);
+            Assert.IsNull(obj.Dependency);
+            Assert.IsNull(obj.MarkedDependency);
+        }
+
+        [Test]
+        public void IfSetInOptions_OnNonResolvableProperty_Throws()
+        {
+            // Arrange
+            _provider = new AutofacMvxIocProvider(_container, new MvxPropertyInjectorOptions()
+            {
+                ThrowIfPropertyInjectionFails = true,
+                InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties
+            });
+
+            // Act
+            MvxIoCResolveException exception = null;
+            try
+            {
+                var obj = Mvx.IocConstruct<HasDependantProperty>();
+            }
+            catch (MvxIoCResolveException x)
+            {
+                exception = x;
+            }
+
+            // Assert
+            Assert.IsNotNull(exception, "Exception expected");
         }
 
         private interface IInterface
@@ -50,9 +133,27 @@ namespace Autofac.Extras.Tests.MvvmCross
         {
         }
 
+        private interface IInterface2
+        {
+        }
+
+
+        private class Concrete2 : IInterface2
+        {
+        }
+
+        private class MyInjectionAttribute : Attribute
+        {
+            
+        }
+
         private class HasDependantProperty
         {
+            [MyInjectionAttribute]
             public IInterface Dependency { get; set; }
+
+            [MvxInject]
+            public IInterface2 MarkedDependency { get; set; }
         }
     }
 }
