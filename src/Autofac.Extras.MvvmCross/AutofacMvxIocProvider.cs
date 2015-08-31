@@ -66,7 +66,7 @@ namespace Autofac.Extras.MvvmCross
             PropertyInjectionEnabled = propertyInjectionOptions.InjectIntoProperties != MvxPropertyInjection.None;
 
             var autofacOptions = propertyInjectionOptions as IAutofacPropertyInjectorOptions;
-            if (autofacOptions != null && autofacOptions.CustomInjectorAttributeType.IsAssignableTo<Attribute>())
+            if (autofacOptions != null && autofacOptions.CustomInjectorAttributeType != null && autofacOptions.CustomInjectorAttributeType.IsAssignableTo<Attribute>())
                 _customInjectorAttributeType = autofacOptions.CustomInjectorAttributeType;
         }
 
