@@ -1,30 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Cirrious.CrossCore.IoC;
 
 namespace Autofac.Extras.MvvmCross
 {
     /// <summary>
-    /// Adds some additional features to autofacpropertyinjection
+    /// Autofac property injection options.
     /// </summary>
     public interface IAutofacPropertyInjectorOptions : IMvxPropertyInjectorOptions
     {
         /// <summary>
-        /// An additiona attribute to use to mark a property to be injected by Property Injection
+        /// An additional attribute used to mark a property as requiring property injection.
         /// </summary>
         Type CustomInjectorAttributeType { get; set; }
     }
 
     /// <summary>
-    /// 
+    /// Autofac property injection options.
     /// </summary>
-    public class AutoFacPropertyInjectionOptions : MvxPropertyInjectorOptions, IAutofacPropertyInjectorOptions
+    public class AutofacPropertyInjectionOptions : MvxPropertyInjectorOptions, IAutofacPropertyInjectorOptions
     {
         /// <summary>
-        /// An additiona attribute to use to mark a property to be injected by Property Injection
+        /// An additional attribute used to mark a property as requiring property injection.
         /// </summary>
         public Type CustomInjectorAttributeType { get; set; }
     }

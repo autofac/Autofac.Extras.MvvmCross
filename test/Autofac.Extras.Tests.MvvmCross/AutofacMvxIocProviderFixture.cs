@@ -4,6 +4,7 @@ using Autofac.Extras.MvvmCross;
 using Autofac.Core.Registration;
 using Autofac.Core;
 using Cirrious.CrossCore;
+using Cirrious.CrossCore.Exceptions;
 using NUnit.Framework;
 
 namespace Autofac.Extras.Tests.MvvmCross
@@ -64,8 +65,8 @@ namespace Autofac.Extras.Tests.MvvmCross
         [Test]
         public void ResolveCreateAndIoCConstructThrowsComponentNotRegisteredExceptionWhenNoTypeRegistered()
         {
-            Assert.That(() => _provider.Resolve<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
-            Assert.That(() => _provider.Create<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
+            Assert.That(() => _provider.Resolve<object>(), Throws.TypeOf<MvxIoCResolveException>());
+            Assert.That(() => _provider.Create<object>(), Throws.TypeOf<MvxIoCResolveException>());
         }
 
         [Test]

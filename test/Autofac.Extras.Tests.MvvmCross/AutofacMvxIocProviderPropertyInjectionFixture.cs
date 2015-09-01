@@ -86,7 +86,7 @@ namespace Autofac.Extras.Tests.MvvmCross
         public void InjectsOnlyMarkedProperties_WithCustomAttribute_IfEnabled()
         {
             // Arrange
-            _provider = new AutofacMvxIocProvider(_container, new AutoFacPropertyInjectionOptions()
+            _provider = new AutofacMvxIocProvider(_container, new AutofacPropertyInjectionOptions()
             {
                 InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties,
                 CustomInjectorAttributeType = typeof(MyInjectionAttribute),
@@ -107,7 +107,7 @@ namespace Autofac.Extras.Tests.MvvmCross
         public void InjectsOnlyMarkedProperties_WithCustomAttribute_IfEnabled_Lazy()
         {
             // Arrange
-            _provider = new AutofacMvxIocProvider(_container, new AutoFacPropertyInjectionOptions()
+            _provider = new AutofacMvxIocProvider(_container, new AutofacPropertyInjectionOptions()
             {
                 InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties,
                 CustomInjectorAttributeType = typeof(MyInjectionAttribute),
@@ -164,6 +164,7 @@ namespace Autofac.Extras.Tests.MvvmCross
 
             // Assert
             Assert.IsNotNull(exception, "Exception expected");
+            Assert.IsTrue(exception.InnerException is DependencyResolutionException, "Autofac exception is not forwarded!");
         }
 
         private interface IInterface

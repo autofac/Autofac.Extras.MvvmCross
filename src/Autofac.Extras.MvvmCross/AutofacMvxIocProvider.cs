@@ -58,11 +58,13 @@ namespace Autofac.Extras.MvvmCross
         /// </exception>
         public AutofacMvxIocProvider(IContainer container, IMvxPropertyInjectorOptions propertyInjectionOptions)
         {
-            PropertyInjectionOptions = propertyInjectionOptions;
             if (container == null)
                 throw new ArgumentNullException("container");
+            if (propertyInjectionOptions == null) 
+                throw new ArgumentNullException("propertyInjectionOptions");
 
             _container = container;
+            PropertyInjectionOptions = propertyInjectionOptions;
             PropertyInjectionEnabled = propertyInjectionOptions.InjectIntoProperties != MvxPropertyInjection.None;
 
             var autofacOptions = propertyInjectionOptions as IAutofacPropertyInjectorOptions;
@@ -73,19 +75,21 @@ namespace Autofac.Extras.MvvmCross
         /// <summary>
         /// Initializes a new instance of the <see cref="AutofacMvxIocProvider"/> class.
         /// </summary>
-        /// <param name="container"></param>
+        /// <param name="container">
+        /// The container from which dependencies should be resolved.
+        /// </param>
         public AutofacMvxIocProvider(IContainer container)
             : this(container, new MvxPropertyInjectorOptions())
         {
         }
 
         /// <summary>
-        /// Gets/sets whether propertyinjection is enabled by default
+        /// Determines if property injection is enabled.
         /// </summary>
         public bool PropertyInjectionEnabled { get; private set; }
 
         /// <summary>
-        /// gets the propertyinjection options
+        /// Gets the property injection options.
         /// </summary>
         public IMvxPropertyInjectorOptions PropertyInjectionOptions { get; private set; }
 
@@ -544,10 +548,7 @@ namespace Autofac.Extras.MvvmCross
             }
             catch (DependencyResolutionException ex)
             {
-                // throw MvxIoCResolveException
-                if (ex.InnerException is MvxIoCResolveException)
-                    throw ex.InnerException;
-                throw;
+                throw new MvxIoCResolveException(ex, "Could not resolve {0}. See InnerException for details", type.FullName);
             }
         }
 
@@ -631,7 +632,11 @@ namespace Autofac.Extras.MvvmCross
                     {
                         if (PropertyInjectionOptions.ThrowIfPropertyInjectionFails)
                         {
-                            throw new MvxIoCResolveException(x, "Could not resolve property {0} of type {1} on {2}", property.Name, property.PropertyType.FullName, type.FullName);
+                            throw;
+                        }
+                        else
+                        {
+                            Mvx.Warning("Could not resolve property {0} of type {1} on {2}", property.Name, property.PropertyType.FullName, type.FullName);
                         }
                     }
 
