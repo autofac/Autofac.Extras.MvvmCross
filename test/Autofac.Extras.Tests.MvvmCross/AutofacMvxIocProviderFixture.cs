@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Configuration;
 using Autofac.Extras.MvvmCross;
 using Autofac.Core.Registration;
 using Autofac.Core;
+using Cirrious.CrossCore;
+using Cirrious.CrossCore.Exceptions;
 using NUnit.Framework;
 
 namespace Autofac.Extras.Tests.MvvmCross
@@ -62,9 +65,8 @@ namespace Autofac.Extras.Tests.MvvmCross
         [Test]
         public void ResolveCreateAndIoCConstructThrowsComponentNotRegisteredExceptionWhenNoTypeRegistered()
         {
-            Assert.That(() => _provider.Resolve<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
-            Assert.That(() => _provider.Create<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
-            Assert.That(() => _provider.IoCConstruct<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
+            Assert.That(() => _provider.Resolve<object>(), Throws.TypeOf<MvxIoCResolveException>());
+            Assert.That(() => _provider.Create<object>(), Throws.TypeOf<MvxIoCResolveException>());
         }
 
         [Test]
@@ -208,12 +210,50 @@ namespace Autofac.Extras.Tests.MvvmCross
             Assert.That(() => _provider.CallbackWhenRegistered(typeof(object), null), Throws.TypeOf<ArgumentNullException>());
         }
 
+        [Test]
+        public void SupportsSingletonRegistrationWithMvxIoCConstructFunc()
+        {
+            _provider.RegisterSingleton<IInterface>(Mvx.IocConstruct<Concrete>);
+
+            var concrete = _provider.Resolve<IInterface>();
+
+            Assert.IsNotNull(concrete);
+        }
+
+        [Test]
+        public void SupportsMvxIocConstructWithoutRegistration()
+        {
+            var obj = Mvx.IocConstruct<Concrete>();
+
+            Assert.IsNotNull(obj);
+        }
+
+        [Test]
+        public void IgnoresPropertiesByDefault()
+        {
+            // Arrange
+            Mvx.RegisterType<IInterface, Concrete>();
+
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.IsNotNull(obj);
+            Assert.IsNull(obj.Dependency);
+        }
+
+
         private interface IInterface
         {
         }
 
         private class Concrete : IInterface
         {
+        }
+
+        private class HasDependantProperty
+        {
+            public IInterface Dependency { get; set; }
         }
     }
 }

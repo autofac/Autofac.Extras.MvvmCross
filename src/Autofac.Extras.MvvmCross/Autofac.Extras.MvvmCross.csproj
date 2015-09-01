@@ -51,6 +51,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AutofacMvxIocProviderResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="AutoFacPropertyInjectionOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <CodeAnalysisDictionary Include="..\..\CodeAnalysisDictionary.xml">
       <Link>CodeAnalysisDictionary.xml</Link>
