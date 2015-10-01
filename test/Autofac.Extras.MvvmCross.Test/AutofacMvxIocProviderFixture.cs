@@ -1,15 +1,15 @@
 ﻿using System;
-using Autofac.Extras.MvvmCross;
-using Autofac.Core.Registration;
 using Autofac.Core;
+using Autofac.Core.Registration;
 using NUnit.Framework;
 
-namespace Autofac.Extras.Tests.MvvmCross
+namespace Autofac.Extras.MvvmCross.Test
 {
     [TestFixture]
     public class AutofacMvxIocProviderFixture
     {
         IContainer _container;
+
         AutofacMvxIocProvider _provider;
 
         [SetUp]

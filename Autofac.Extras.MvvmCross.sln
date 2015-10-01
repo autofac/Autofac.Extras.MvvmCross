@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Autofac.Extras.MvvmCross", "src\Autofac.Extras.MvvmCross\Autofac.Extras.MvvmCross.csproj", "{1C6A45CE-216B-4F3B-8EBC-CB8782B76E7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Autofac.Extras.Tests.MvvmCross", "test\Autofac.Extras.Tests.MvvmCross\Autofac.Extras.Tests.MvvmCross.csproj", "{BFC1B673-4FB5-4240-8495-095802188DFD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Autofac.Extras.MvvmCross.Test", "test\Autofac.Extras.MvvmCross.Test\Autofac.Extras.MvvmCross.Test.csproj", "{BFC1B673-4FB5-4240-8495-095802188DFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
