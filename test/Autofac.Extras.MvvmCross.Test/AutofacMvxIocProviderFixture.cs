@@ -1,114 +1,106 @@
 ﻿using System;
 using Autofac.Core;
 using Autofac.Core.Registration;
-using NUnit.Framework;
+using Xunit;
 
 namespace Autofac.Extras.MvvmCross.Test
 {
-    [TestFixture]
-    public class AutofacMvxIocProviderFixture
+    public class AutofacMvxIocProviderFixture : IDisposable
     {
         IContainer _container;
 
         AutofacMvxIocProvider _provider;
 
-        [SetUp]
-        public void SetUp()
+        public AutofacMvxIocProviderFixture()
         {
             _container = new ContainerBuilder().Build();
             _provider = new AutofacMvxIocProvider(_container);
         }
 
-        [TearDown]
-        public void TearDown()
-        {
-            _provider.Dispose();
-        }
-
-        [Test]
+        [Fact]
         public void CanResolveReturnsTrueWhenMatchingTypeIsRegistered()
         {
             var builder = new ContainerBuilder();
             builder.Register(c => new object());
             builder.Update(_container);
 
-            Assert.That(_provider.CanResolve<object>(), Is.True);
+            Assert.True(_provider.CanResolve<object>());
         }
 
-        [Test]
+        [Fact]
         public void CanResolveReturnsFalseWhenNoMatchingTypeIsRegistered()
         {
-            Assert.That(_provider.CanResolve<object>(), Is.False);
+            Assert.False(_provider.CanResolve<object>());
         }
 
-        [Test]
+        [Fact]
         public void CanResolveThrowsArgumentNullExceptionWhenCalledWithNoTypeArgument()
         {
-            Assert.That(() => _provider.CanResolve(null), Throws.TypeOf<ArgumentNullException>());
+            Assert.Throws<ArgumentNullException>(() => _provider.CanResolve(null));
         }
 
-        [Test]
+        [Fact]
         public void ResolveCreateAndIoCConstructReturnsRegisteredType()
         {
             var builder = new ContainerBuilder();
             builder.Register(c => new object());
             builder.Update(_container);
 
-            Assert.That(_provider.Resolve<object>(), Is.TypeOf<object>());
-            Assert.That(_provider.Create<object>(), Is.TypeOf<object>());
-            Assert.That(_provider.IoCConstruct<object>(), Is.TypeOf<object>());
+            Assert.IsType<object>(_provider.Resolve<object>());
+            Assert.IsType<object>(_provider.Create<object>());
+            Assert.IsType<object>(_provider.IoCConstruct<object>());
         }
 
-        [Test]
+        [Fact]
         public void ResolveCreateAndIoCConstructThrowsComponentNotRegisteredExceptionWhenNoTypeRegistered()
         {
-            Assert.That(() => _provider.Resolve<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
-            Assert.That(() => _provider.Create<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
-            Assert.That(() => _provider.IoCConstruct<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
+            Assert.Throws<ComponentNotRegisteredException>(() => _provider.Resolve<object>());
+            Assert.Throws<ComponentNotRegisteredException>(() => _provider.Create<object>());
+            Assert.Throws<ComponentNotRegisteredException>(() => _provider.IoCConstruct<object>());
         }
 
-        [Test]
+        [Fact]
         public void ResolveCreateAndIoCConstructThrowsArgumentNullExceptionWhenCalledWithNoTypeArgument()
         {
-            Assert.That(() => _provider.Resolve(null), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.Create(null), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.IoCConstruct(null), Throws.TypeOf<ArgumentNullException>());
+            Assert.Throws<ArgumentNullException>(() => _provider.Resolve(null));
+            Assert.Throws<ArgumentNullException>(() => _provider.Create(null));
+            Assert.Throws<ArgumentNullException>(() => _provider.IoCConstruct(null));
         }
 
-        [Test]
+        [Fact]
         public void GetSingletonReturnsSingletonIfTypeRegisteredAsSingleton()
         {
             var builder = new ContainerBuilder();
             builder.Register(c => new object()).SingleInstance();
             builder.Update(_container);
 
-            Assert.That(_provider.GetSingleton<object>(), Is.TypeOf<object>());
-            Assert.That(_provider.GetSingleton<object>(), Is.SameAs(_provider.GetSingleton<object>()));
+            Assert.IsType<object>(_provider.GetSingleton<object>());
+            Assert.Same(_provider.GetSingleton<object>(), _provider.GetSingleton<object>());
         }
 
-        [Test]
+        [Fact]
         public void GetSingletonThrowsDependencyResolutionExceptionIfTypeRegisteredButNotAsSingleton()
         {
             var builder = new ContainerBuilder();
             builder.Register(c => new object());
             builder.Update(_container);
 
-            Assert.That(() => _provider.GetSingleton<object>(), Throws.TypeOf<DependencyResolutionException>());
+            Assert.Throws<DependencyResolutionException>(() => _provider.GetSingleton<object>());
         }
 
-        [Test]
+        [Fact]
         public void GetSingletonThrowsComponentNotRegisteredExceptionWhenNoTypeRegistered()
         {
-            Assert.That(() => _provider.GetSingleton<object>(), Throws.TypeOf<ComponentNotRegisteredException>());
+            Assert.Throws<ComponentNotRegisteredException>(() => _provider.GetSingleton<object>());
         }
 
-        [Test]
+        [Fact]
         public void GetSingletonThrowsArgumentNullExceptionWhenCalledWithNoTypeArgument()
         {
-            Assert.That(() => _provider.GetSingleton(null), Throws.TypeOf<ArgumentNullException>());
+            Assert.Throws<ArgumentNullException>(() => _provider.GetSingleton(null));
         }
 
-        [Test]
+        [Fact]
         public void TryResolveResolvesOutParameterWhenMatchingTypeRegistered()
         {
             var builder = new ContainerBuilder();
@@ -118,94 +110,99 @@ namespace Autofac.Extras.MvvmCross.Test
             object foo;
             var success = _provider.TryResolve(out foo);
 
-            Assert.That(foo, Is.TypeOf<object>());
-            Assert.That(success, Is.True);
+            Assert.IsType<object>(foo);
+            Assert.True(success);
         }
 
-        [Test]
+        [Fact]
         public void RegisterTypeRegistersConcreteTypeAgainstInterface()
         {
             _provider.RegisterType<IInterface, Concrete>();
             var instance = _provider.Resolve<IInterface>();
-            Assert.That(instance, Is.TypeOf<Concrete>());
-            Assert.That(instance, Is.Not.SameAs(_provider.Resolve<IInterface>()));
+            Assert.IsType<Concrete>(instance);
+            Assert.NotSame(instance, _provider.Resolve<IInterface>());
         }
 
-        [Test]
+        [Fact]
         public void RegisterTypeWithDelegateRegistersConcreteTypeAgainstInterface()
         {
             _provider.RegisterType<IInterface>(() => new Concrete());
             var instance = _provider.Resolve<IInterface>();
-            Assert.That(instance, Is.TypeOf<Concrete>());
-            Assert.That(instance, Is.Not.SameAs(_provider.Resolve<IInterface>()));
+            Assert.IsType<Concrete>(instance);
+            Assert.NotSame(instance, _provider.Resolve<IInterface>());
 
             _provider.RegisterType(typeof(IInterface), () => new Concrete());
-            Assert.That(_provider.Resolve<IInterface>(), Is.Not.SameAs(_provider.Resolve<IInterface>()));
+            Assert.NotSame(_provider.Resolve<IInterface>(), _provider.Resolve<IInterface>());
         }
 
-        [Test]
+        [Fact]
         public void RegisterTypeWithDelegateAndTypeParameterRegistersConcreteTypeAgainstInterface()
         {
             _provider.RegisterType(typeof(IInterface), () => new Concrete());
             var instance = _provider.Resolve<IInterface>();
-            Assert.That(instance, Is.TypeOf<Concrete>());
-            Assert.That(instance, Is.Not.SameAs(_provider.Resolve<IInterface>()));
+            Assert.IsType<Concrete>(instance);
+            Assert.NotSame(instance, _provider.Resolve<IInterface>());
         }
 
-        [Test]
+        [Fact]
         public void RegisterTypeThrowsArgumentNullExceptionWhenCalledWithNoFromOrToTypeArgument()
         {
-            Assert.That(() => _provider.RegisterType(null, typeof(object)), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.RegisterType(typeof(object), (Type)null), Throws.TypeOf<ArgumentNullException>());
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterType(null, typeof(object)));
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterType(typeof(object), (Type)null));
         }
 
-        [Test]
+        [Fact]
         public void RegisterTypeThrowsArgumentNullExceptionWhenCalledWithNoTypeInstanceOrConstructorArgument()
         {
-            Assert.That(() => _provider.RegisterType((Func<object>)null), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.RegisterType(null, () => new object()), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.RegisterType(typeof(object), (Func<object>)null), Throws.TypeOf<ArgumentNullException>());
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterType((Func<object>)null));
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterType(null, () => new object()));
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterType(typeof(object), (Func<object>)null));
         }
 
-        [Test]
+        [Fact]
         public void RegisterSingletonRegistersConcreteTypeAsSingletonAgainstInterface()
         {
             var concreteViaFunc = new Concrete();
             _provider.RegisterSingleton<IInterface>(() => concreteViaFunc);
-            Assert.That(_provider.Resolve<IInterface>(), Is.EqualTo(concreteViaFunc));
-            Assert.That(_provider.Resolve<IInterface>(), Is.SameAs(_provider.Resolve<IInterface>()));
+            Assert.Equal(concreteViaFunc, _provider.Resolve<IInterface>());
+            Assert.Same(_provider.Resolve<IInterface>(), _provider.Resolve<IInterface>());
 
             var concreteInstance = new Concrete();
             _provider.RegisterSingleton<IInterface>(concreteInstance);
-            Assert.That(_provider.Resolve<IInterface>(), Is.EqualTo(concreteInstance));
-            Assert.That(_provider.Resolve<IInterface>(), Is.SameAs(_provider.Resolve<IInterface>()));
+            Assert.Equal(concreteInstance, _provider.Resolve<IInterface>());
+            Assert.Same(_provider.Resolve<IInterface>(), _provider.Resolve<IInterface>());
         }
 
-        [Test]
+        [Fact]
         public void RegisterSingletoneThrowsArgumentNullExceptionWhenCalledWithNoTypeInstanceOrConstructorArgument()
         {
-            Assert.That(() => _provider.RegisterSingleton((IInterface)null), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.RegisterSingleton((Func<IInterface>)null), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.RegisterSingleton(null, new object()), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.RegisterSingleton(null, () => new object()), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.RegisterSingleton(typeof(object), null), Throws.TypeOf<ArgumentNullException>());
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterSingleton((IInterface)null));
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterSingleton((Func<IInterface>)null));
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterSingleton(null, new object()));
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterSingleton(null, () => new object()));
+            Assert.Throws<ArgumentNullException>(() => _provider.RegisterSingleton(typeof(object), null));
         }
 
-        [Test]
+        [Fact]
         public void CallbackWhenRegisteredFiresSuccessfully()
         {
             var called = false;
             _provider.CallbackWhenRegistered<IInterface>(() => called = true);
 
             _provider.RegisterType<IInterface, Concrete>();
-            Assert.That(called, Is.True);
+            Assert.True(called);
         }
 
-        [Test]
+        [Fact]
         public void CallbackWhenRegisteredThrowsArgumentNullExceptionWhenCalledWithNoTypeOrActionArgument()
         {
-            Assert.That(() => _provider.CallbackWhenRegistered(null, () => new object()), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _provider.CallbackWhenRegistered(typeof(object), null), Throws.TypeOf<ArgumentNullException>());
+            Assert.Throws<ArgumentNullException>(() => _provider.CallbackWhenRegistered(null, () => new object()));
+            Assert.Throws<ArgumentNullException>(() => _provider.CallbackWhenRegistered(typeof(object), null));
+        }
+
+        public void Dispose()
+        {
+            _provider.Dispose();
         }
 
         private interface IInterface
