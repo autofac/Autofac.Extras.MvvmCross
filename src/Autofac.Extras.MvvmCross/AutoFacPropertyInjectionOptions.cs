@@ -1,5 +1,5 @@
 ﻿using System;
-using Cirrious.CrossCore.IoC;
+using MvvmCross.Platform.IoC;
 
 namespace Autofac.Extras.MvvmCross
 {

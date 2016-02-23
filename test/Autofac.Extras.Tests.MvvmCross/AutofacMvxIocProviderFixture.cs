@@ -3,8 +3,8 @@ using System.Configuration;
 using Autofac.Extras.MvvmCross;
 using Autofac.Core.Registration;
 using Autofac.Core;
-using Cirrious.CrossCore;
-using Cirrious.CrossCore.Exceptions;
+using MvvmCross.Platform;
+using MvvmCross.Platform.Exceptions;
 using NUnit.Framework;
 
 namespace Autofac.Extras.Tests.MvvmCross
