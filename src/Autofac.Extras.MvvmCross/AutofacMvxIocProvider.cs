@@ -24,22 +24,24 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using Autofac.Core;
 using Autofac.Core.Lifetime;
 using Autofac.Core.Registration;
-using Cirrious.CrossCore.Core;
-using Cirrious.CrossCore.IoC;
+using MvvmCross.Platform.Core;
+using MvvmCross.Platform.IoC;
 
 namespace Autofac.Extras.MvvmCross
 {
     /// <summary>
     /// Inversion of control provider for the MvvmCross framework backed by Autofac.
     /// </summary>
+    [SuppressMessage("CA2213", "CA2213", Justification = "The container gets disposed by the owner.")]
     public class AutofacMvxIocProvider : MvxSingleton<IMvxIoCProvider>, IMvxIoCProvider
     {
-        readonly IContainer _container;
+        private readonly IContainer _container;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutofacMvxIocProvider"/> class.
@@ -53,9 +55,11 @@ namespace Autofac.Extras.MvvmCross
         public AutofacMvxIocProvider(IContainer container)
         {
             if (container == null)
-                throw new ArgumentNullException("container");
+            {
+                throw new ArgumentNullException(nameof(container));
+            }
 
-            _container = container;
+            this._container = container;
         }
 
         /// <summary>
@@ -72,7 +76,7 @@ namespace Autofac.Extras.MvvmCross
         /// </exception>
         public void CallbackWhenRegistered<T>(Action action)
         {
-            CallbackWhenRegistered(typeof(T), action);
+            this.CallbackWhenRegistered(typeof(T), action);
         }
 
         /// <summary>
@@ -90,16 +94,23 @@ namespace Autofac.Extras.MvvmCross
         public void CallbackWhenRegistered(Type type, Action action)
         {
             if (type == null)
-                throw new ArgumentNullException("type");
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
             if (action == null)
-                throw new ArgumentNullException("action");
-
-            _container.ComponentRegistry.Registered += (sender, args) =>
             {
-                if (args.ComponentRegistration.Services.OfType<TypedService>().Any(x => x.ServiceType == type))
-                    action();
-            };
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            this.
+                       _container.ComponentRegistry.Registered += (sender, args) =>
+                       {
+                           if (args.ComponentRegistration.Services.OfType<TypedService>().Any(x => x.ServiceType == type))
+                           {
+                               action();
+                           }
+                       };
         }
 
         /// <summary>
@@ -120,9 +131,10 @@ namespace Autofac.Extras.MvvmCross
         /// are missing dependencies for constructing the instance.
         /// </para>
         /// </remarks>
-        public bool CanResolve<T>() where T : class
+        public bool CanResolve<T>()
+            where T : class
         {
-            return CanResolve(typeof(T));
+            return this.CanResolve(typeof(T));
         }
 
         /// <summary>
@@ -149,9 +161,11 @@ namespace Autofac.Extras.MvvmCross
         public bool CanResolve(Type type)
         {
             if (type == null)
-                throw new ArgumentNullException("type");
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
-            return _container.IsRegistered(type);
+            return this._container.IsRegistered(type);
         }
 
         /// <summary>
@@ -163,9 +177,10 @@ namespace Autofac.Extras.MvvmCross
         /// <returns>
         /// The resolved instance of type <typeparamref name="T"/>.
         /// </returns>
-        public T Create<T>() where T : class
+        public T Create<T>()
+            where T : class
         {
-            return (T)Create(typeof(T));
+            return (T)this.Create(typeof(T));
         }
 
         /// <summary>
@@ -182,7 +197,7 @@ namespace Autofac.Extras.MvvmCross
         /// </exception>
         public object Create(Type type)
         {
-            return Resolve(type);
+            return this.Resolve(type);
         }
 
         /// <summary>
@@ -194,9 +209,10 @@ namespace Autofac.Extras.MvvmCross
         /// <returns>
         /// The resolved singleton instance of type <typeparamref name="T"/>.
         /// </returns>
-        public T GetSingleton<T>() where T : class
+        public T GetSingleton<T>()
+            where T : class
         {
-            return (T)GetSingleton(typeof(T));
+            return (T)this.GetSingleton(typeof(T));
         }
 
         /// <summary>
@@ -217,18 +233,24 @@ namespace Autofac.Extras.MvvmCross
         public object GetSingleton(Type type)
         {
             if (type == null)
-                throw new ArgumentNullException("type");
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
             var service = new TypedService(type);
             IComponentRegistration registration;
-            if (!_container.ComponentRegistry.TryGetRegistration(service, out registration))
+            if (!this._container.ComponentRegistry.TryGetRegistration(service, out registration))
+            {
                 throw new ComponentNotRegisteredException(service);
+            }
 
             if (registration.Sharing != InstanceSharing.Shared || !(registration.Lifetime is RootScopeLifetime))
+            {
                 // Ensure the dependency is registered as a singleton WITHOUT resolving the dependency twice.
-                throw new DependencyResolutionException(String.Format(CultureInfo.CurrentCulture, AutofacMvxIocProviderResources.TypeNotRegisteredAsSingleton, type));
+                throw new DependencyResolutionException(string.Format(CultureInfo.CurrentCulture, AutofacMvxIocProviderResources.TypeNotRegisteredAsSingleton, type));
+            }
 
-            return Resolve(type);
+            return this.Resolve(type);
         }
 
         /// <summary>
@@ -240,9 +262,10 @@ namespace Autofac.Extras.MvvmCross
         /// <returns>
         /// The resolved instance of type <typeparamref name="T"/>.
         /// </returns>
-        public T IoCConstruct<T>() where T : class
+        public T IoCConstruct<T>()
+            where T : class
         {
-            return (T)IoCConstruct(typeof(T));
+            return (T)this.IoCConstruct(typeof(T));
         }
 
         /// <summary>
@@ -259,7 +282,7 @@ namespace Autofac.Extras.MvvmCross
         /// </exception>
         public object IoCConstruct(Type type)
         {
-            return Resolve(type);
+            return this.Resolve(type);
         }
 
         /// <summary>
@@ -273,9 +296,10 @@ namespace Autofac.Extras.MvvmCross
         /// <exception cref="System.ArgumentNullException">
         /// Thrown if <paramref name="theObject"/> is <see langword="null"/>.
         /// </exception>
-        public void RegisterSingleton<TInterface>(TInterface theObject) where TInterface : class
+        public void RegisterSingleton<TInterface>(TInterface theObject)
+            where TInterface : class
         {
-            RegisterSingleton(typeof(TInterface), theObject);
+            this.RegisterSingleton(typeof(TInterface), theObject);
         }
 
         /// <summary>
@@ -294,7 +318,7 @@ namespace Autofac.Extras.MvvmCross
         public void RegisterSingleton<TInterface>(Func<TInterface> theConstructor)
             where TInterface : class
         {
-            RegisterSingleton(typeof(TInterface), theConstructor);
+            this.RegisterSingleton(typeof(TInterface), theConstructor);
         }
 
         /// <summary>
@@ -311,14 +335,18 @@ namespace Autofac.Extras.MvvmCross
         public void RegisterSingleton(Type tInterface, object theObject)
         {
             if (tInterface == null)
-                throw new ArgumentNullException("tInterface");
+            {
+                throw new ArgumentNullException(nameof(tInterface));
+            }
 
             if (theObject == null)
-                throw new ArgumentNullException("theObject");
+            {
+                throw new ArgumentNullException(nameof(theObject));
+            }
 
             var cb = new ContainerBuilder();
             cb.RegisterInstance(theObject).As(tInterface).AsSelf().SingleInstance();
-            cb.Update(_container);
+            cb.Update(this._container);
         }
 
         /// <summary>
@@ -337,14 +365,18 @@ namespace Autofac.Extras.MvvmCross
         public void RegisterSingleton(Type tInterface, Func<object> theConstructor)
         {
             if (tInterface == null)
-                throw new ArgumentNullException("tInterface");
+            {
+                throw new ArgumentNullException(nameof(tInterface));
+            }
 
             if (theConstructor == null)
-                throw new ArgumentNullException("theConstructor");
+            {
+                throw new ArgumentNullException(nameof(theConstructor));
+            }
 
             var cb = new ContainerBuilder();
             cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
-            cb.Update(_container);
+            cb.Update(this._container);
         }
 
         /// <summary>
@@ -367,7 +399,7 @@ namespace Autofac.Extras.MvvmCross
             where TFrom : class
             where TTo : class, TFrom
         {
-            RegisterType(typeof(TFrom), typeof(TTo));
+            this.RegisterType(typeof(TFrom), typeof(TTo));
         }
 
         /// <summary>
@@ -383,14 +415,17 @@ namespace Autofac.Extras.MvvmCross
         /// <exception cref="System.ArgumentNullException">
         /// Thrown if <paramref name="constructor"/> is <see langword="null"/>.
         /// </exception>
-        public void RegisterType<TInterface>(Func<TInterface> constructor) where TInterface : class
+        public void RegisterType<TInterface>(Func<TInterface> constructor)
+            where TInterface : class
         {
             if (constructor == null)
-                throw new ArgumentNullException("constructor");
+            {
+                throw new ArgumentNullException(nameof(constructor));
+            }
 
             var cb = new ContainerBuilder();
             cb.Register(c => constructor()).AsSelf();
-            cb.Update(_container);
+            cb.Update(this._container);
         }
 
         /// <summary>
@@ -409,14 +444,18 @@ namespace Autofac.Extras.MvvmCross
         public void RegisterType(Type t, Func<object> constructor)
         {
             if (t == null)
-                throw new ArgumentNullException("t");
+            {
+                throw new ArgumentNullException(nameof(t));
+            }
 
             if (constructor == null)
-                throw new ArgumentNullException("constructor");
+            {
+                throw new ArgumentNullException(nameof(constructor));
+            }
 
             var cb = new ContainerBuilder();
             cb.Register(c => constructor()).As(t).AsSelf();
-            cb.Update(_container);
+            cb.Update(this._container);
         }
 
         /// <summary>
@@ -441,14 +480,18 @@ namespace Autofac.Extras.MvvmCross
         public void RegisterType(Type tFrom, Type tTo)
         {
             if (tFrom == null)
-                throw new ArgumentNullException("tFrom");
+            {
+                throw new ArgumentNullException(nameof(tFrom));
+            }
 
             if (tTo == null)
-                throw new ArgumentNullException("tTo");
+            {
+                throw new ArgumentNullException(nameof(tTo));
+            }
 
             var cb = new ContainerBuilder();
             cb.RegisterType(tTo).As(tFrom).AsSelf();
-            cb.Update(_container);
+            cb.Update(this._container);
         }
 
         /// <summary>
@@ -460,9 +503,10 @@ namespace Autofac.Extras.MvvmCross
         /// <returns>
         /// The resolved instance of type <typeparamref name="T"/>.
         /// </returns>
-        public T Resolve<T>() where T : class
+        public T Resolve<T>()
+            where T : class
         {
-            return (T)Resolve(typeof(T));
+            return (T)this.Resolve(typeof(T));
         }
 
         /// <summary>
@@ -480,9 +524,11 @@ namespace Autofac.Extras.MvvmCross
         public object Resolve(Type type)
         {
             if (type == null)
-                throw new ArgumentNullException("type");
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
-            return _container.Resolve(type);
+            return this._container.Resolve(type);
         }
 
         /// <summary>
@@ -497,9 +543,10 @@ namespace Autofac.Extras.MvvmCross
         /// <returns>
         /// <see langword="true"/> if a component providing the service is available; <see langword="false"/> if not.
         /// </returns>
-        public bool TryResolve<T>(out T resolved) where T : class
+        public bool TryResolve<T>(out T resolved)
+            where T : class
         {
-            return _container.TryResolve(out resolved);
+            return this._container.TryResolve(out resolved);
         }
 
         /// <summary>
@@ -517,9 +564,11 @@ namespace Autofac.Extras.MvvmCross
         public bool TryResolve(Type type, out object resolved)
         {
             if (type == null)
-                throw new ArgumentNullException("type");
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
-            return _container.TryResolve(type, out resolved);
+            return this._container.TryResolve(type, out resolved);
         }
     }
 }
