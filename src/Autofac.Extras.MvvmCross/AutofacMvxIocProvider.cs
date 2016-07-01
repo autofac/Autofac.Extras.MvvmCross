@@ -27,6 +27,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using Autofac.Builder;
 using Autofac.Core;
 using Autofac.Core.Lifetime;
 using Autofac.Core.Registration;
@@ -43,6 +44,8 @@ namespace Autofac.Extras.MvvmCross
     {
         private readonly IContainer _container;
 
+        private readonly IAutofacPropertyInjectorOptions _propertyInjectorOptions;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AutofacMvxIocProvider"/> class.
         /// </summary>
@@ -53,13 +56,37 @@ namespace Autofac.Extras.MvvmCross
         /// Thrown if <paramref name="container"/> is <see langword="null"/>.
         /// </exception>
         public AutofacMvxIocProvider(IContainer container)
+            : this(container, new AutofacPropertyInjectorOptions())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AutofacMvxIocProvider"/> class.
+        /// </summary>
+        /// <param name="container">
+        /// The container from which dependencies should be resolved.
+        /// </param>
+        /// <param name="propertyInjectorOptions">
+        /// An <see cref="IAutofacPropertyInjectorOptions"/> that defines how property
+        /// injection should be handled.
+        /// </param>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="container"/> or <paramref name="propertyInjectorOptions" /> is <see langword="null"/>.
+        /// </exception>
+        public AutofacMvxIocProvider(IContainer container, IAutofacPropertyInjectorOptions propertyInjectorOptions)
         {
             if (container == null)
             {
                 throw new ArgumentNullException(nameof(container));
             }
 
+            if (propertyInjectorOptions == null)
+            {
+                throw new ArgumentNullException(nameof(propertyInjectorOptions));
+            }
+
             this._container = container;
+            this._propertyInjectorOptions = propertyInjectorOptions;
         }
 
         /// <summary>
@@ -103,14 +130,13 @@ namespace Autofac.Extras.MvvmCross
                 throw new ArgumentNullException(nameof(action));
             }
 
-            this.
-                       _container.ComponentRegistry.Registered += (sender, args) =>
-                       {
-                           if (args.ComponentRegistration.Services.OfType<TypedService>().Any(x => x.ServiceType == type))
-                           {
-                               action();
-                           }
-                       };
+            this._container.ComponentRegistry.Registered += (sender, args) =>
+            {
+                if (args.ComponentRegistration.Services.OfType<TypedService>().Any(x => x.ServiceType == type))
+                {
+                    action();
+                }
+            };
         }
 
         /// <summary>
@@ -345,6 +371,8 @@ namespace Autofac.Extras.MvvmCross
             }
 
             var cb = new ContainerBuilder();
+
+            // You can't inject properties on a pre-constructed instance.
             cb.RegisterInstance(theObject).As(tInterface).AsSelf().SingleInstance();
             cb.Update(this._container);
         }
@@ -375,7 +403,8 @@ namespace Autofac.Extras.MvvmCross
             }
 
             var cb = new ContainerBuilder();
-            cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
+            var reg = cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
+            this.SetPropertyInjection(reg);
             cb.Update(this._container);
         }
 
@@ -424,7 +453,8 @@ namespace Autofac.Extras.MvvmCross
             }
 
             var cb = new ContainerBuilder();
-            cb.Register(c => constructor()).AsSelf();
+            var reg = cb.Register(c => constructor()).AsSelf();
+            this.SetPropertyInjection(reg);
             cb.Update(this._container);
         }
 
@@ -454,7 +484,8 @@ namespace Autofac.Extras.MvvmCross
             }
 
             var cb = new ContainerBuilder();
-            cb.Register(c => constructor()).As(t).AsSelf();
+            var reg = cb.Register(c => constructor()).As(t).AsSelf();
+            this.SetPropertyInjection(reg);
             cb.Update(this._container);
         }
 
@@ -490,7 +521,8 @@ namespace Autofac.Extras.MvvmCross
             }
 
             var cb = new ContainerBuilder();
-            cb.RegisterType(tTo).As(tFrom).AsSelf();
+            var reg = cb.RegisterType(tTo).As(tFrom).AsSelf();
+            this.SetPropertyInjection(reg);
             cb.Update(this._container);
         }
 
@@ -569,6 +601,31 @@ namespace Autofac.Extras.MvvmCross
             }
 
             return this._container.TryResolve(type, out resolved);
+        }
+
+        /// <summary>
+        /// Sets the property injection on a registration based on options.
+        /// </summary>
+        /// <typeparam name="TLimit">The most specific type to which instances of the registration
+        /// can be cast.</typeparam>
+        /// <typeparam name="TActivatorData">Activator builder type.</typeparam>
+        /// <typeparam name="TRegistrationStyle">Registration style type.</typeparam>
+        /// <param name="registration">The registration to update.</param>
+        private void SetPropertyInjection<TLimit, TActivatorData, TRegistrationStyle>(IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle> registration)
+        {
+            if (this._propertyInjectorOptions.InjectIntoProperties == MvxPropertyInjection.None)
+            {
+                return;
+            }
+
+            if (this._propertyInjectorOptions.PropertyInjectionSelector == null)
+            {
+                registration.PropertiesAutowired();
+            }
+            else
+            {
+                registration.PropertiesAutowired(this._propertyInjectorOptions.PropertyInjectionSelector);
+            }
         }
     }
 }
