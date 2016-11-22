@@ -19,5 +19,10 @@ namespace Autofac.Extras.MvvmCross
         /// which properties to inject when property injection is enabled.
         /// </value>
         public IPropertySelector PropertyInjectionSelector { get; set; }
+
+        /// <summary>
+        /// Gets or sets additional attribute used to mark a property as requiring property injection.
+        /// </summary>
+        public Type CustomInjectorAttributeType { get; set; }
     }
 }

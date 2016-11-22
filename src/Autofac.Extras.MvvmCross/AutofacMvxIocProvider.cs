@@ -32,8 +32,11 @@ using Autofac.Builder;
 using Autofac.Core;
 using Autofac.Core.Lifetime;
 using Autofac.Core.Registration;
+using MvvmCross.Platform;
 using MvvmCross.Platform.Core;
+using MvvmCross.Platform.Exceptions;
 using MvvmCross.Platform.IoC;
+using BindingFlags = MvvmCross.Platform.BindingFlags;
 
 namespace Autofac.Extras.MvvmCross
 {
@@ -43,8 +46,9 @@ namespace Autofac.Extras.MvvmCross
     [SuppressMessage("CA2213", "CA2213", Justification = "The container gets disposed by the owner.")]
     public class AutofacMvxIocProvider : MvxSingleton<IMvxIoCProvider>, IMvxIoCProvider
     {
-        readonly IContainer _container;
-        private Type _customInjectorAttributeType;
+        private readonly Type _customInjectorAttributeType;
+
+        public IContainer Container { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutofacMvxIocProvider"/> class.
@@ -52,12 +56,27 @@ namespace Autofac.Extras.MvvmCross
         /// <param name="container">
         /// The container from which dependencies should be resolved.
         /// </param>
-        /// <param name="propertyInjectionOptions"></param>
+        /// <param name="propertyInjectionOptions">propertyInjectionOptions</param>
         /// <exception cref="System.ArgumentNullException">
         /// Thrown if <paramref name="container"/> is <see langword="null"/>.
         /// </exception>
         public AutofacMvxIocProvider(IContainer container, IMvxPropertyInjectorOptions propertyInjectionOptions)
         {
+            if (container == null)
+                throw new ArgumentNullException(nameof(container));
+            if (propertyInjectionOptions == null)
+                throw new ArgumentNullException(nameof(propertyInjectionOptions));
+
+            Container = container;
+            PropertyInjectionOptions = propertyInjectionOptions;
+            PropertyInjectionEnabled = propertyInjectionOptions.InjectIntoProperties != MvxPropertyInjection.None;
+
+            var autofacOptions = propertyInjectionOptions as IAutofacPropertyInjectorOptions;
+            if (autofacOptions != null && autofacOptions.CustomInjectorAttributeType != null && autofacOptions.CustomInjectorAttributeType.IsAssignableTo<Attribute>())
+                _customInjectorAttributeType = autofacOptions.CustomInjectorAttributeType;
+
+            this.Container = container;
+            this.PropertyInjectionOptions = propertyInjectionOptions;
         }
 
         /// <summary>
@@ -74,23 +93,8 @@ namespace Autofac.Extras.MvvmCross
         /// Thrown if <paramref name="container"/> or <paramref name="propertyInjectorOptions" /> is <see langword="null"/>.
         /// </exception>
         public AutofacMvxIocProvider(IContainer container, IAutofacPropertyInjectorOptions propertyInjectorOptions)
+            : this(container, (IMvxPropertyInjectorOptions)propertyInjectorOptions)
         {
-            if (container == null)
-                throw new ArgumentNullException("container");
-            if (propertyInjectionOptions == null) 
-                throw new ArgumentNullException("propertyInjectionOptions");
-
-            _container = container;
-            PropertyInjectionOptions = propertyInjectionOptions;
-            PropertyInjectionEnabled = propertyInjectionOptions.InjectIntoProperties != MvxPropertyInjection.None;
-
-            var autofacOptions = propertyInjectionOptions as IAutofacPropertyInjectorOptions;
-            if (autofacOptions != null && autofacOptions.CustomInjectorAttributeType != null && autofacOptions.CustomInjectorAttributeType.IsAssignableTo<Attribute>())
-                _customInjectorAttributeType = autofacOptions.CustomInjectorAttributeType;
-        }
-
-            this.Container = container;
-            this.PropertyInjectorOptions = propertyInjectorOptions;
         }
 
         /// <summary>
@@ -105,7 +109,7 @@ namespace Autofac.Extras.MvvmCross
         }
 
         /// <summary>
-        /// Determines if property injection is enabled.
+        /// Gets a value indicating whether if property injection is enabled.
         /// </summary>
         public bool PropertyInjectionEnabled { get; private set; }
 
@@ -333,7 +337,7 @@ namespace Autofac.Extras.MvvmCross
         /// </exception>
         public virtual object IoCConstruct(Type type)
         {
-            if (!_container.IsRegistered(type))
+            if (!Container.IsRegistered(type))
                 RegisterType(type, type);
 
             return Resolve(type);
@@ -403,7 +407,7 @@ namespace Autofac.Extras.MvvmCross
             // You can't inject properties on a pre-constructed instance.
             cb.RegisterInstance(theObject).As(tInterface).AsSelf().SingleInstance();
 
-            cb.Update(_container);
+            cb.Update(Container);
         }
 
         /// <summary>
@@ -436,14 +440,17 @@ namespace Autofac.Extras.MvvmCross
             var type = theConstructor.GetMethodInfo().ReturnType;
             var x = cb.RegisterType(type).As(tInterface).AsSelf().SingleInstance();
             if (PropertyInjectionEnabled)
+            {
                 EnablePropertyInjection(type, x);
+            }
 
             var y = cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
             if (PropertyInjectionEnabled)
+            {
                 EnablePropertyInjection(tInterface, y);
+            }
 
-
-            cb.Update(_container);
+            cb.Update(Container);
         }
 
         /// <summary>
@@ -496,7 +503,7 @@ namespace Autofac.Extras.MvvmCross
             if (PropertyInjectionEnabled)
                 EnablePropertyInjection(type, x);
 
-            cb.Update(_container);
+            cb.Update(Container);
         }
 
         /// <summary>
@@ -530,7 +537,7 @@ namespace Autofac.Extras.MvvmCross
             if (PropertyInjectionEnabled)
                 EnablePropertyInjection(type, x);
 
-            cb.Update(_container);
+            cb.Update(Container);
         }
 
         /// <summary>
@@ -569,7 +576,7 @@ namespace Autofac.Extras.MvvmCross
             if (PropertyInjectionEnabled)
                 EnablePropertyInjection(tFrom, x);
 
-            cb.Update(_container);
+            cb.Update(Container);
         }
 
         /// <summary>
@@ -608,7 +615,7 @@ namespace Autofac.Extras.MvvmCross
 
             try
             {
-                return _container.Resolve(type);
+                return Container.Resolve(type);
             }
             catch (DependencyResolutionException ex)
             {
@@ -674,18 +681,20 @@ namespace Autofac.Extras.MvvmCross
                 throw new ArgumentNullException(nameof(registration));
             }
 
-            if (this.PropertyInjectorOptions.InjectIntoProperties == MvxPropertyInjection.None)
+            if (this.PropertyInjectionOptions.InjectIntoProperties == MvxPropertyInjection.None)
             {
                 return;
             }
 
-            if (this.PropertyInjectorOptions.PropertyInjectionSelector == null)
+            var options = this.PropertyInjectionOptions as IAutofacPropertyInjectorOptions;
+
+            if (options == null || options.PropertyInjectionSelector == null)
             {
                 registration.PropertiesAutowired();
             }
             else
             {
-                registration.PropertiesAutowired(this.PropertyInjectorOptions.PropertyInjectionSelector);
+               registration.PropertiesAutowired(options.PropertyInjectionSelector);
             }
         }
 
@@ -700,13 +709,18 @@ namespace Autofac.Extras.MvvmCross
             switch (PropertyInjectionOptions.InjectIntoProperties)
             {
                 case MvxPropertyInjection.MvxInjectInterfaceProperties:
-                    if(_customInjectorAttributeType != null)
+                    if (_customInjectorAttributeType != null)
+                    {
                         injectableProperties = injectableProperties
                             .Where(p => p.GetCustomAttributes(typeof(MvxInjectAttribute), false).Any() ||
                                         p.GetCustomAttributes(_customInjectorAttributeType, false).Any());
+                    }
                     else
+                    {
                         injectableProperties = injectableProperties
                             .Where(p => p.GetCustomAttributes(typeof(MvxInjectAttribute), false).Any());
+                    }
+
                     break;
                 case MvxPropertyInjection.AllInterfaceProperties:
                     break;
@@ -728,7 +742,7 @@ namespace Autofac.Extras.MvvmCross
                     {
                         dependency = e.Context.Resolve(property.PropertyType);
                     }
-                    catch (Exception x)
+                    catch (Exception)
                     {
                         if (PropertyInjectionOptions.ThrowIfPropertyInjectionFails)
                         {
@@ -740,11 +754,10 @@ namespace Autofac.Extras.MvvmCross
                         }
                     }
 
-                    if(dependency != null)
+                    if (dependency != null)
                         property.SetValue(e.Instance, dependency);
                 });
             }
         }
-
     }
 }
