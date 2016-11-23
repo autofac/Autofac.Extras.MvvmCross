@@ -1,4 +1,4 @@
-﻿{
+{
   "buildOptions": {
     "additionalArguments": [
       "/ruleset:../../build/Analyzers.ruleset"

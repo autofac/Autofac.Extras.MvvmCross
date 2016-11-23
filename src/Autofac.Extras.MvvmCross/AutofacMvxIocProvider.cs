@@ -438,16 +438,18 @@ namespace Autofac.Extras.MvvmCross
             var cb = new ContainerBuilder();
 
             var type = theConstructor.GetMethodInfo().ReturnType;
-            var x = cb.RegisterType(type).As(tInterface).AsSelf().SingleInstance();
+            var regType = cb.RegisterType(type).As(tInterface).AsSelf().SingleInstance();
             if (PropertyInjectionEnabled)
             {
-                EnablePropertyInjection(type, x);
+                // EnablePropertyInjection(type, regType);
+                SetPropertyInjection(regType);
             }
 
-            var y = cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
+            var regInterface = cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
             if (PropertyInjectionEnabled)
             {
-                EnablePropertyInjection(tInterface, y);
+                // EnablePropertyInjection(tInterface, regInterface);
+                SetPropertyInjection(regInterface);
             }
 
             cb.Update(Container);
@@ -501,7 +503,10 @@ namespace Autofac.Extras.MvvmCross
             var type = constructor.GetMethodInfo().ReturnType;
             var x = cb.Register(c => constructor()).AsSelf();
             if (PropertyInjectionEnabled)
-                EnablePropertyInjection(type, x);
+            {
+                // EnablePropertyInjection(type, x);
+                SetPropertyInjection(x);
+            }
 
             cb.Update(Container);
         }
@@ -535,7 +540,10 @@ namespace Autofac.Extras.MvvmCross
             var type = constructor.GetMethodInfo().ReturnType;
             var x = cb.Register(c => constructor()).As(t).AsSelf();
             if (PropertyInjectionEnabled)
-                EnablePropertyInjection(type, x);
+            {
+                // EnablePropertyInjection(type, x);
+                SetPropertyInjection(x);
+            }
 
             cb.Update(Container);
         }
@@ -574,7 +582,10 @@ namespace Autofac.Extras.MvvmCross
             var cb = new ContainerBuilder();
             var x = cb.RegisterType(tTo).As(tFrom).AsSelf();
             if (PropertyInjectionEnabled)
-                EnablePropertyInjection(tFrom, x);
+            {
+                // EnablePropertyInjection(tFrom, x);
+                SetPropertyInjection(x);
+            }
 
             cb.Update(Container);
         }
@@ -688,13 +699,13 @@ namespace Autofac.Extras.MvvmCross
 
             var options = this.PropertyInjectionOptions as IAutofacPropertyInjectorOptions;
 
-            if (options == null || options.PropertyInjectionSelector == null)
+            if (options?.PropertyInjectionSelector == null)
             {
                 registration.PropertiesAutowired();
             }
             else
             {
-               registration.PropertiesAutowired(options.PropertyInjectionSelector);
+                registration.PropertiesAutowired(options.PropertyInjectionSelector);
             }
         }
 
