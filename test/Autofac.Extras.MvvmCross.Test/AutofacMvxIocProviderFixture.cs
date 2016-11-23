@@ -2,17 +2,28 @@
 using System.Collections.Generic;
 using Autofac.Core;
 using Autofac.Core.Registration;
+using MvvmCross.Platform.Exceptions;
 using MvvmCross.Platform.IoC;
 using Xunit;
 
 namespace Autofac.Extras.MvvmCross.Test
 {
-    public class AutofacMvxIocProviderFixture : IDisposable
+    public class AutofacMvxIocProviderFixture : AutofacMvxTestBase
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
         private interface IInterface
         {
+        }
+        
+        protected override void DisposeOverride()
+        {
+            foreach (var disposable in this._disposables)
+            {
+                disposable.Dispose();
+            }
+
+            this._disposables.Clear();
         }
 
         [Fact]
@@ -54,16 +65,6 @@ namespace Autofac.Extras.MvvmCross.Test
         {
             var provider = this.CreateProvider();
             Assert.Throws<ArgumentNullException>(() => provider.CanResolve(null));
-        }
-
-        public void Dispose()
-        {
-            foreach (var disposable in this._disposables)
-            {
-                disposable.Dispose();
-            }
-
-            this._disposables.Clear();
         }
 
         [Fact]
@@ -114,7 +115,7 @@ namespace Autofac.Extras.MvvmCross.Test
             provider.RegisterType(() => new Concrete());
             provider.RegisterType(typeof(Exception), () => new DivideByZeroException());
             var resolved = provider.Resolve<Concrete>();
-
+            
             Assert.IsType<DivideByZeroException>(resolved.PropertyToInject);
             Assert.Null(resolved.PropertyToSkip);
         }
@@ -243,9 +244,9 @@ namespace Autofac.Extras.MvvmCross.Test
         public void ResolveCreateAndIoCConstructThrowsComponentNotRegisteredExceptionWhenNoTypeRegistered()
         {
             var provider = this.CreateProvider();
-            Assert.Throws<ComponentNotRegisteredException>(() => provider.Resolve<object>());
-            Assert.Throws<ComponentNotRegisteredException>(() => provider.Create<object>());
-            Assert.Throws<ComponentNotRegisteredException>(() => provider.IoCConstruct<object>());
+            Assert.Throws<MvxIoCResolveException>(() => provider.Resolve<object>());
+            Assert.Throws<MvxIoCResolveException>(() => provider.Create<object>());
+            Assert.NotNull(provider.IoCConstruct<object>());
         }
 
         [Fact]

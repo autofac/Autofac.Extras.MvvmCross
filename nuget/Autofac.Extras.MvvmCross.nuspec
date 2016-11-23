@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+    <metadata>
+        <id>Autofac.Extras.MvvmCross</id>
+        <version>$version$</version>
+        <authors>Autofac.Extras.MvvmCross</authors>
+        <owners>Autofac Contributors</owners>
+        <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+        <projectUrl>http://autofac.org/</projectUrl>
+        <iconUrl>https://cloud.githubusercontent.com/assets/1156571/13684110/16b8f152-e6bf-11e5-84ae-22c66c6d351a.png</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>Autofac extension supporting MvvmCross dependency injection.</description>
+        <summary>This extension provides support for using Autofac as the DI framework in MvvmCross.</summary>
+        <releaseNotes>Added .NET Core support. Updated to MvvmCross 4.</releaseNotes>
+        <tags>autofac,di,ioc,dependencyinjection</tags>
+        <dependencies>
+            <group targetFramework=".NETFramework4.5.1">
+                <dependency id="System.Runtime" version="4.0.10" />
+                <dependency id="Autofac" version="4.0.0" />
+                <dependency id="MvvmCross.Core" version="4.0.0" />
+            </group>
+            <group targetFramework=".NETStandard1.1">
+                <dependency id="System.Collections" version="4.0.11" />
+                <dependency id="System.ComponentModel.TypeConverter" version="4.1.0" />
+                <dependency id="System.Diagnostics.Tools" version="4.0.1" />
+                <dependency id="System.Globalization" version="4.0.11" />
+                <dependency id="System.IO" version="4.1.0" />
+                <dependency id="System.Linq" version="4.1.0" />
+                <dependency id="System.Reflection" version="4.1.0" />
+                <dependency id="System.Reflection.Extensions" version="4.0.1" />
+                <dependency id="System.Resources.ResourceManager" version="4.0.1" />
+                <dependency id="System.Runtime" version="4.1.0" />
+                <dependency id="Autofac" version="4.0.0" />
+                <dependency id="MvvmCross.Core" version="4.0.0" />
+            </group>
+            <group targetFramework=".NETPortable4.5-net45+win8+wpa81">
+                <dependency id="Autofac" version="4.0.0" />
+                <dependency id="MvvmCross.Core" version="4.0.0" />
+            </group>
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="..\src\Autofac.Extras.MvvmCross\bin\Release\net451\Autofac.Extras.MvvmCross.dll" target="lib\net451\Autofac.Extras.MvvmCross.dll" />
+        <file src="..\src\Autofac.Extras.MvvmCross\bin\Release\net451\Autofac.Extras.MvvmCross.xml" target="lib\net451\Autofac.Extras.MvvmCross.xml" />
+        <file src="..\src\Autofac.Extras.MvvmCross\bin\Release\netstandard1.1\Autofac.Extras.MvvmCross.dll" target="lib\netstandard1.1\Autofac.Extras.MvvmCross.dll" />
+        <file src="..\src\Autofac.Extras.MvvmCross\bin\Release\netstandard1.1\Autofac.Extras.MvvmCross.xml" target="lib\netstandard1.1\Autofac.Extras.MvvmCross.xml" />
+        <file src="..\src\Autofac.Extras.MvvmCross\bin\Release\portable45-net45+win8+wpa81\Autofac.Extras.MvvmCross.dll" target="lib\portable45-net45+win8+wpa81\Autofac.Extras.MvvmCross.dll" />
+        <file src="..\src\Autofac.Extras.MvvmCross\bin\Release\portable45-net45+win8+wpa81\Autofac.Extras.MvvmCross.xml" target="lib\portable45-net45+win8+wpa81\Autofac.Extras.MvvmCross.xml" />
+    </files>
+</package>
