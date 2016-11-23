@@ -8,12 +8,22 @@ using Xunit;
 
 namespace Autofac.Extras.MvvmCross.Test
 {
-    public class AutofacMvxIocProviderFixture : IDisposable
+    public class AutofacMvxIocProviderFixture : AutofacMvxTestBase
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
         private interface IInterface
         {
+        }
+        
+        protected override void DisposeOverride()
+        {
+            foreach (var disposable in this._disposables)
+            {
+                disposable.Dispose();
+            }
+
+            this._disposables.Clear();
         }
 
         [Fact]
@@ -55,16 +65,6 @@ namespace Autofac.Extras.MvvmCross.Test
         {
             var provider = this.CreateProvider();
             Assert.Throws<ArgumentNullException>(() => provider.CanResolve(null));
-        }
-        
-        public void Dispose()
-        {
-            foreach (var disposable in this._disposables)
-            {
-                disposable.Dispose();
-            }
-
-            this._disposables.Clear();
         }
 
         [Fact]

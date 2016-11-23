@@ -32,6 +32,7 @@ using Autofac.Builder;
 using Autofac.Core;
 using Autofac.Core.Lifetime;
 using Autofac.Core.Registration;
+using MvvmCross.Core.Platform;
 using MvvmCross.Platform;
 using MvvmCross.Platform.Core;
 using MvvmCross.Platform.Exceptions;
@@ -692,14 +693,19 @@ namespace Autofac.Extras.MvvmCross
                 throw new ArgumentNullException(nameof(registration));
             }
 
-            if (this.PropertyInjectionOptions.InjectIntoProperties == MvxPropertyInjection.None)
+            var options = this.PropertyInjectionOptions as IAutofacPropertyInjectorOptions;
+            var mode = this.PropertyInjectionOptions.InjectIntoProperties;
+
+            if (mode == MvxPropertyInjection.None)
             {
                 return;
             }
 
-            var options = this.PropertyInjectionOptions as IAutofacPropertyInjectorOptions;
-
-            if (options?.PropertyInjectionSelector == null)
+            if (mode == MvxPropertyInjection.MvxInjectInterfaceProperties)
+            {
+                registration.PropertiesAutowired(SelectAllMvxInject);
+            }
+            else if (options?.PropertyInjectionSelector == null)
             {
                 registration.PropertiesAutowired();
             }
@@ -709,66 +715,21 @@ namespace Autofac.Extras.MvvmCross
             }
         }
 
-        private void EnablePropertyInjection(Type type, IRegistrationBuilder<object, IConcreteActivatorData, SingleRegistrationStyle> registrationBuilder)
+        private bool SelectAllMvxInject(PropertyInfo pi, object obj)
         {
-            var injectableProperties = type
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
-                .Where(p => p.PropertyType.GetTypeInfo().IsInterface)
-                .Where(p => p.IsConventional())
-                .Where(p => p.CanWrite);
+            var options = this.PropertyInjectionOptions as IAutofacPropertyInjectorOptions;
+            var type = _customInjectorAttributeType ?? typeof(MvxInjectAttribute);
 
-            switch (PropertyInjectionOptions.InjectIntoProperties)
+            // if there is the custom or an MvxInject attribute on the property, accept
+            var accept = pi.GetCustomAttributes(type).Any();
+
+            // and if there is also a selector, call the selector as well
+            if (accept && options?.PropertyInjectionSelector != null)
             {
-                case MvxPropertyInjection.MvxInjectInterfaceProperties:
-                    if (_customInjectorAttributeType != null)
-                    {
-                        injectableProperties = injectableProperties
-                            .Where(p => p.GetCustomAttributes(typeof(MvxInjectAttribute), false).Any() ||
-                                        p.GetCustomAttributes(_customInjectorAttributeType, false).Any());
-                    }
-                    else
-                    {
-                        injectableProperties = injectableProperties
-                            .Where(p => p.GetCustomAttributes(typeof(MvxInjectAttribute), false).Any());
-                    }
-
-                    break;
-                case MvxPropertyInjection.AllInterfaceProperties:
-                    break;
-                case MvxPropertyInjection.None:
-                    Mvx.Error("Internal error - should not call FindInjectableProperties with MvxPropertyInjection.None");
-                    injectableProperties = new PropertyInfo[0];
-                    break;
-                default:
-                    throw new MvxException("unknown option for InjectIntoProperties {0}", PropertyInjectionOptions.InjectIntoProperties);
+                return options.PropertyInjectionSelector.InjectProperty(pi, obj);
             }
 
-            foreach (var prop in injectableProperties)
-            {
-                var property = prop;
-                registrationBuilder.OnActivating(e =>
-                {
-                    object dependency = null;
-                    try
-                    {
-                        dependency = e.Context.Resolve(property.PropertyType);
-                    }
-                    catch (Exception)
-                    {
-                        if (PropertyInjectionOptions.ThrowIfPropertyInjectionFails)
-                        {
-                            throw;
-                        }
-                        else
-                        {
-                            Mvx.Warning("Could not resolve property {0} of type {1} on {2}", property.Name, property.PropertyType.FullName, type.FullName);
-                        }
-                    }
-
-                    if (dependency != null)
-                        property.SetValue(e.Instance, dependency);
-                });
-            }
+            return accept;
         }
     }
 }
