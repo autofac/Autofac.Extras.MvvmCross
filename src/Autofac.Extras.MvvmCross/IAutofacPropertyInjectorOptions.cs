@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using Autofac.Core;
+﻿using Autofac.Core;
 using MvvmCross.Platform.IoC;
 
 namespace Autofac.Extras.MvvmCross

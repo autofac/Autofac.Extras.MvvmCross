@@ -15,7 +15,8 @@
       "version": "1.0.0"
     },
     "dotnet-test-xunit": "2.2.0-*",
-    "xunit": "2.2.0-*"
+    "xunit": "2.2.0-*",
+    "Nito.AsyncEx": "3.0.1"
   },
   "frameworks": {
     "net46": {}
