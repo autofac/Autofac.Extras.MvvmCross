@@ -69,7 +69,7 @@ namespace Autofac.Extras.MvvmCross
 
             if (propertyInjectionOptions.ThrowIfPropertyInjectionFails)
             {
-                throw new NotSupportedException("AutoFac does not support throwing an exception in case a service could not be injected into a property!");
+                throw new NotSupportedException("Autofac does not support throwing an exception in case a service could not be injected into a property!");
             }
 
             this.Container = container;
