@@ -1,18 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Autofac.Core;
 using Autofac.Core.Registration;
+using MvvmCross.Platform;
+using MvvmCross.Platform.Exceptions;
 using MvvmCross.Platform.IoC;
 using Xunit;
 
 namespace Autofac.Extras.MvvmCross.Test
 {
-    public class AutofacMvxIocProviderFixture : IDisposable
+    public class AutofacMvxIocProviderFixture : AutofacMvxTestBase
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
-        private interface IInterface
+        protected override void DisposeOverride()
         {
+            foreach (var disposable in this._disposables)
+            {
+                disposable.Dispose();
+            }
+
+            this._disposables.Clear();
         }
 
         [Fact]
@@ -56,16 +66,6 @@ namespace Autofac.Extras.MvvmCross.Test
             Assert.Throws<ArgumentNullException>(() => provider.CanResolve(null));
         }
 
-        public void Dispose()
-        {
-            foreach (var disposable in this._disposables)
-            {
-                disposable.Dispose();
-            }
-
-            this._disposables.Clear();
-        }
-
         [Fact]
         public void GetSingletonReturnsSingletonIfTypeRegisteredAsSingleton()
         {
@@ -99,7 +99,8 @@ namespace Autofac.Extras.MvvmCross.Test
 
             Assert.Throws<DependencyResolutionException>(() => provider.GetSingleton<object>());
         }
-
+        
+        
         [Fact]
         public void PropertyInjectionCanBeCustomized()
         {
@@ -114,7 +115,7 @@ namespace Autofac.Extras.MvvmCross.Test
             provider.RegisterType(() => new Concrete());
             provider.RegisterType(typeof(Exception), () => new DivideByZeroException());
             var resolved = provider.Resolve<Concrete>();
-
+            
             Assert.IsType<DivideByZeroException>(resolved.PropertyToInject);
             Assert.Null(resolved.PropertyToSkip);
         }
@@ -243,9 +244,9 @@ namespace Autofac.Extras.MvvmCross.Test
         public void ResolveCreateAndIoCConstructThrowsComponentNotRegisteredExceptionWhenNoTypeRegistered()
         {
             var provider = this.CreateProvider();
-            Assert.Throws<ComponentNotRegisteredException>(() => provider.Resolve<object>());
-            Assert.Throws<ComponentNotRegisteredException>(() => provider.Create<object>());
-            Assert.Throws<ComponentNotRegisteredException>(() => provider.IoCConstruct<object>());
+            Assert.Throws<MvxIoCResolveException>(() => provider.Resolve<object>());
+            Assert.Throws<MvxIoCResolveException>(() => provider.Create<object>());
+            Assert.NotNull(provider.IoCConstruct<object>());
         }
 
         [Fact]
@@ -262,16 +263,240 @@ namespace Autofac.Extras.MvvmCross.Test
             Assert.True(success);
         }
 
-        private AutofacMvxIocProvider CreateProvider(IContainer container = null)
+        [Fact]
+        public void InjectsPropertiesIfEnabled()
+        {
+            // Arrange
+            var provider = CreateProvider(options: 
+                new MvxPropertyInjectorOptions() { InjectIntoProperties = MvxPropertyInjection.AllInterfaceProperties });
+            Mvx.RegisterType<IInterface1, Concrete1>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.NotNull(obj);
+            Assert.NotNull(obj.Dependency);
+            Assert.NotNull(obj.MarkedDependency);
+        }
+
+        [Fact]
+        public void InjectsOnlyMarkedPropertiesIfEnabled()
+        {
+            // Arrange
+            var provider = CreateProvider(options:
+                new MvxPropertyInjectorOptions()
+                {
+                    InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties
+                });
+            Mvx.RegisterType<IInterface1, Concrete1>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.NotNull(obj);
+            Assert.Null(obj.Dependency);
+            Assert.NotNull(obj.MarkedDependency);
+        }
+
+        [Fact]
+        public void InjectsOnlyMarkedPropertiesIfEnabled_Lazy()
+        {
+            // Arrange
+            var provider = CreateProvider(options:
+                new MvxPropertyInjectorOptions()
+                {
+                    InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties
+                });
+            Mvx.RegisterType<IInterface1, Concrete1>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+            Mvx.RegisterSingleton<IHasDependantProperty>(Mvx.IocConstruct<HasDependantProperty>);
+
+            // Act
+            var obj = Mvx.Resolve<IHasDependantProperty>();
+
+            // Assert
+            Assert.NotNull(obj);
+            Assert.Null(obj.Dependency);
+            Assert.NotNull(obj.MarkedDependency);
+        }
+
+        [Fact]
+        public void InjectsOnlyMarkedProperties_WithCustomAttribute_IfEnabled()
+        {
+            // Arrange
+            var provider = CreateProvider(options: new AutofacPropertyInjectorOptions()
+            {
+                InjectIntoProperties = MvxPropertyInjection.AllInterfaceProperties,
+                PropertyInjectionSelector = new CustomAttributeSelector(typeof(MyInjectionAttribute)),
+            });
+            Mvx.RegisterType<IInterface1, Concrete1>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.NotNull(obj);
+            Assert.NotNull(obj.Dependency);
+            Assert.Null(obj.MarkedDependency);
+        }
+
+        [Fact]
+        public void InjectsOnlyMarkedProperties_WithCustomAttribute_IfEnabled_Lazy()
+        {
+            // Arrange
+            var provider = CreateProvider(options: new AutofacPropertyInjectorOptions()
+            {
+                InjectIntoProperties = MvxPropertyInjection.AllInterfaceProperties,
+                PropertyInjectionSelector = new CustomAttributeSelector(typeof(MyInjectionAttribute)),
+            });
+            Mvx.RegisterType<IInterface1, Concrete1>();
+            Mvx.RegisterType<IInterface2, Concrete2>();
+            Mvx.RegisterSingleton<IHasDependantProperty>(Mvx.IocConstruct<HasDependantProperty>);
+
+            // Act
+            var obj = Mvx.Resolve<IHasDependantProperty>();
+
+            // Assert
+            Assert.NotNull(obj);
+            Assert.NotNull(obj.Dependency);
+            Assert.Null(obj.MarkedDependency);
+        }
+
+        [Fact]
+        public void IgnoresNonResolvableProperty()
+        {
+            // Arrange
+            var provider = CreateProvider(options:
+                new MvxPropertyInjectorOptions()
+                {
+                    InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties
+                });
+
+            // Act
+            var obj = Mvx.IocConstruct<HasDependantProperty>();
+
+            // Assert
+            Assert.NotNull(obj);
+            Assert.Null(obj.Dependency);
+            Assert.Null(obj.MarkedDependency);
+        }
+
+        // [Fact]
+        public void IfSetInOptions_OnNonResolvableProperty_Throws()
+        {
+            // Arrange
+            try
+            {
+                using (var p = CreateProvider(options: new MvxPropertyInjectorOptions()
+                {
+                    ThrowIfPropertyInjectionFails = true,
+                    InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties
+                }))
+                {
+
+                }
+            }
+            catch (NotSupportedException)
+            {
+                return;
+            }
+            catch (Exception)
+            {
+                Assert.False(true, "Expected a NotSupportedException");
+            }
+
+            Assert.False(true, "Expected some kind of Exception");
+
+            /*
+            // Act
+            MvxIoCResolveException exception = null;
+            HasDependantProperty obj = null;
+            try
+            {
+                obj = Mvx.IocConstruct<HasDependantProperty>();
+            }
+            catch (MvxIoCResolveException x)
+            {
+                exception = x;
+            }
+
+            // Assert
+            Assert.Null(obj?.Dependency);
+            Assert.Null(obj?.MarkedDependency);
+            Assert.NotNull(exception);
+            Assert.True(exception.InnerException is DependencyResolutionException, "Autofac exception is not forwarded!");
+            */
+        }
+
+        private AutofacMvxIocProvider CreateProvider(IContainer container = null, MvxPropertyInjectorOptions options = null)
         {
             if (container == null)
             {
                 container = new ContainerBuilder().Build();
             }
 
-            var provider = new AutofacMvxIocProvider(container);
+            var provider = new AutofacMvxIocProvider(container, options ?? new MvxPropertyInjectorOptions());
             this._disposables.Add(provider);
             return provider;
+        }
+
+        private interface IInterface1
+        {
+        }
+
+        private class Concrete1 : IInterface1
+        {
+        }
+
+        private interface IInterface2
+        {
+        }
+
+        private class Concrete2 : IInterface2
+        {
+        }
+
+        private class MyInjectionAttribute : Attribute
+        {
+        }
+
+        private class HasDependantProperty : IHasDependantProperty
+        {
+            [MyInjection]
+            public IInterface1 Dependency { get; set; }
+
+            [MvxInject]
+            public IInterface2 MarkedDependency { get; set; }
+        }
+
+        private interface IHasDependantProperty
+        {
+            IInterface1 Dependency { get; set; }
+            IInterface2 MarkedDependency { get; set; }
+        }
+
+        private class CustomAttributeSelector : IPropertySelector
+        {
+            private readonly Type _customAttributeType;
+
+            public CustomAttributeSelector(Type customAttributeType)
+            {
+                if (customAttributeType == null) throw new ArgumentNullException(nameof(customAttributeType));
+                _customAttributeType = customAttributeType;
+            }
+
+            public bool InjectProperty(PropertyInfo propertyInfo, object instance)
+            {
+                return propertyInfo.GetCustomAttributes(_customAttributeType).Any();
+            }
+        }
+        
+        private interface IInterface
+        {
         }
 
         private class Concrete : IInterface
