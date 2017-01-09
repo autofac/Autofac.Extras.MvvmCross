@@ -99,8 +99,7 @@ namespace Autofac.Extras.MvvmCross.Test
 
             Assert.Throws<DependencyResolutionException>(() => provider.GetSingleton<object>());
         }
-        
-        
+
         [Fact]
         public void PropertyInjectionCanBeCustomized()
         {
@@ -115,7 +114,7 @@ namespace Autofac.Extras.MvvmCross.Test
             provider.RegisterType(() => new Concrete());
             provider.RegisterType(typeof(Exception), () => new DivideByZeroException());
             var resolved = provider.Resolve<Concrete>();
-            
+
             Assert.IsType<DivideByZeroException>(resolved.PropertyToInject);
             Assert.Null(resolved.PropertyToSkip);
         }
@@ -267,7 +266,7 @@ namespace Autofac.Extras.MvvmCross.Test
         public void InjectsPropertiesIfEnabled()
         {
             // Arrange
-            var provider = CreateProvider(options: 
+            var provider = CreateProvider(options:
                 new MvxPropertyInjectorOptions() { InjectIntoProperties = MvxPropertyInjection.AllInterfaceProperties });
             Mvx.RegisterType<IInterface1, Concrete1>();
             Mvx.RegisterType<IInterface2, Concrete2>();
@@ -335,6 +334,7 @@ namespace Autofac.Extras.MvvmCross.Test
             });
             Mvx.RegisterType<IInterface1, Concrete1>();
             Mvx.RegisterType<IInterface2, Concrete2>();
+
             // Act
             var obj = Mvx.IocConstruct<HasDependantProperty>();
 
@@ -397,7 +397,6 @@ namespace Autofac.Extras.MvvmCross.Test
                     InjectIntoProperties = MvxPropertyInjection.MvxInjectInterfaceProperties
                 }))
                 {
-
                 }
             }
             catch (NotSupportedException)
@@ -476,6 +475,7 @@ namespace Autofac.Extras.MvvmCross.Test
         private interface IHasDependantProperty
         {
             IInterface1 Dependency { get; set; }
+
             IInterface2 MarkedDependency { get; set; }
         }
 
@@ -494,7 +494,7 @@ namespace Autofac.Extras.MvvmCross.Test
                 return propertyInfo.GetCustomAttributes(_customAttributeType).Any();
             }
         }
-        
+
         private interface IInterface
         {
         }

@@ -20,7 +20,6 @@ namespace Autofac.Extras.MvvmCross.Test
 
         protected virtual void DisposeOverride()
         {
-            
         }
 
         public void Dispose()
