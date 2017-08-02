@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard1.1</TargetFramework>
+    <PackageTargetFallback>$(PackageTargetFallback);portable-net45+win8+wpa81</PackageTargetFallback>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <Company>Autofac Project - http://autofac.org</Company>
+    <Product>Autofac</Product>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <Copyright>Copyright © 2017 Autofac Contributors</Copyright>
+    <Description>MvvmCross integration for Autofac IoC</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="autofac" Version="4.6.1" />
+    <PackageReference Include="MvvmCross.Core" Version="5.1.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="AutofacMvxIocProviderResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AutofacMvxIocProviderResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="AutofacMvxIocProviderResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AutofacMvxIocProviderResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>
