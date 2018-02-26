@@ -1,51 +1,28 @@
-﻿// This software is part of the Autofac IoC container
-// Copyright © 2014 Autofac Contributors
-// http://autofac.org
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
-using Autofac.Builder;
-using Autofac.Core;
-using Autofac.Core.Lifetime;
-using Autofac.Core.Registration;
-using MvvmCross.Platform.Core;
-using MvvmCross.Platform.Exceptions;
-using MvvmCross.Platform.IoC;
+﻿// <copyright file="AutofacMvxIocProvider.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Autofac.Extras.MvvmCross
 {
+    using System;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Globalization;
+    using System.Linq;
+    using System.Reflection;
+    using Autofac.Builder;
+    using Autofac.Core;
+    using Autofac.Core.Lifetime;
+    using Autofac.Core.Registration;
+    using global::MvvmCross.Base;
+    using global::MvvmCross.Exceptions;
+    using global::MvvmCross.IoC;
+
     /// <summary>
     /// Inversion of control provider for the MvvmCross framework backed by Autofac.
     /// </summary>
     [SuppressMessage("CA2213", "CA2213", Justification = "The container gets disposed by the owner.")]
     public class AutofacMvxIocProvider : MvxSingleton<IMvxIoCProvider>, IMvxIoCProvider
     {
-        public IContainer Container { get; private set; }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AutofacMvxIocProvider"/> class.
         /// </summary>
@@ -59,13 +36,18 @@ namespace Autofac.Extras.MvvmCross
         public AutofacMvxIocProvider(IContainer container, IMvxPropertyInjectorOptions propertyInjectionOptions)
         {
             if (container == null)
+            {
                 throw new ArgumentNullException(nameof(container));
-            if (propertyInjectionOptions == null)
-                throw new ArgumentNullException(nameof(propertyInjectionOptions));
+            }
 
-            Container = container;
-            PropertyInjectionOptions = propertyInjectionOptions;
-            PropertyInjectionEnabled = propertyInjectionOptions.InjectIntoProperties != MvxPropertyInjection.None;
+            if (propertyInjectionOptions == null)
+            {
+                throw new ArgumentNullException(nameof(propertyInjectionOptions));
+            }
+
+            this.Container = container;
+            this.PropertyInjectionOptions = propertyInjectionOptions;
+            this.PropertyInjectionEnabled = propertyInjectionOptions.InjectIntoProperties != MvxPropertyInjection.None;
 
             if (propertyInjectionOptions.ThrowIfPropertyInjectionFails)
             {
@@ -104,6 +86,11 @@ namespace Autofac.Extras.MvvmCross
             : this(container, new MvxPropertyInjectorOptions())
         {
         }
+
+        /// <summary>
+        /// Gets a container.
+        /// </summary>
+        public IContainer Container { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether if property injection is enabled.
@@ -334,10 +321,12 @@ namespace Autofac.Extras.MvvmCross
         /// </exception>
         public virtual object IoCConstruct(Type type)
         {
-            if (!Container.IsRegistered(type))
-                RegisterType(type, type);
+            if (!this.Container.IsRegistered(type))
+            {
+                this.RegisterType(type, type);
+            }
 
-            return Resolve(type);
+            return this.Resolve(type);
         }
 
         /// <summary>
@@ -404,7 +393,7 @@ namespace Autofac.Extras.MvvmCross
             // You can't inject properties on a pre-constructed instance.
             cb.RegisterInstance(theObject).As(tInterface).AsSelf().SingleInstance();
 
-            cb.Update(Container);
+            cb.Update(this.Container);
         }
 
         /// <summary>
@@ -436,18 +425,18 @@ namespace Autofac.Extras.MvvmCross
 
             var type = theConstructor.GetMethodInfo().ReturnType;
             var regType = cb.RegisterType(type).As(tInterface).AsSelf().SingleInstance();
-            if (PropertyInjectionEnabled)
+            if (this.PropertyInjectionEnabled)
             {
-                SetPropertyInjection(regType);
+                this.SetPropertyInjection(regType);
             }
 
             var regInterface = cb.Register(cc => theConstructor()).As(tInterface).AsSelf().SingleInstance();
-            if (PropertyInjectionEnabled)
+            if (this.PropertyInjectionEnabled)
             {
-                SetPropertyInjection(regInterface);
+                this.SetPropertyInjection(regInterface);
             }
 
-            cb.Update(Container);
+            cb.Update(this.Container);
         }
 
         /// <summary>
@@ -496,12 +485,12 @@ namespace Autofac.Extras.MvvmCross
 
             var cb = new ContainerBuilder();
             var x = cb.Register(c => constructor()).AsSelf();
-            if (PropertyInjectionEnabled)
+            if (this.PropertyInjectionEnabled)
             {
-                SetPropertyInjection(x);
+                this.SetPropertyInjection(x);
             }
 
-            cb.Update(Container);
+            cb.Update(this.Container);
         }
 
         /// <summary>
@@ -532,12 +521,12 @@ namespace Autofac.Extras.MvvmCross
             var cb = new ContainerBuilder();
             var type = constructor.GetMethodInfo().ReturnType;
             var x = cb.Register(c => constructor()).As(t).AsSelf();
-            if (PropertyInjectionEnabled)
+            if (this.PropertyInjectionEnabled)
             {
-                SetPropertyInjection(x);
+                this.SetPropertyInjection(x);
             }
 
-            cb.Update(Container);
+            cb.Update(this.Container);
         }
 
         /// <summary>
@@ -573,12 +562,12 @@ namespace Autofac.Extras.MvvmCross
 
             var cb = new ContainerBuilder();
             var x = cb.RegisterType(tTo).As(tFrom).AsSelf();
-            if (PropertyInjectionEnabled)
+            if (this.PropertyInjectionEnabled)
             {
-                SetPropertyInjection(x);
+                this.SetPropertyInjection(x);
             }
 
-            cb.Update(Container);
+            cb.Update(this.Container);
         }
 
         /// <summary>
@@ -617,7 +606,7 @@ namespace Autofac.Extras.MvvmCross
 
             try
             {
-                return Container.Resolve(type);
+                return this.Container.Resolve(type);
             }
             catch (DependencyResolutionException ex)
             {
@@ -666,6 +655,16 @@ namespace Autofac.Extras.MvvmCross
         }
 
         /// <summary>
+        /// Returns a new child container off the current container.
+        /// </summary>
+        /// <returns>Returns a new child container.</returns>
+        public IMvxIoCProvider CreateChildContainer()
+        {
+            var childContainer = (IContainer)this.Container.BeginLifetimeScope();
+            return new AutofacMvxIocProvider(childContainer);
+        }
+
+        /// <summary>
         /// Sets the property injection on a registration based on options.
         /// </summary>
         /// <typeparam name="TLimit">The most specific type to which instances of the registration
@@ -693,7 +692,7 @@ namespace Autofac.Extras.MvvmCross
 
             if (mode == MvxPropertyInjection.MvxInjectInterfaceProperties)
             {
-                registration.PropertiesAutowired(SelectAllMvxInject);
+                registration.PropertiesAutowired(this.SelectAllMvxInject);
             }
             else if (options?.PropertyInjectionSelector == null)
             {

@@ -1,8 +1,12 @@
-﻿using Autofac.Core;
-using MvvmCross.Platform.IoC;
+﻿// <copyright file="IAutofacPropertyInjectorOptions.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Autofac.Extras.MvvmCross
 {
+    using Autofac.Core;
+    using global::MvvmCross.IoC;
+
     /// <summary>
     /// Defines additional customization for Autofac property injection.
     /// </summary>
