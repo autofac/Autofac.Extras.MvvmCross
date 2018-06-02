@@ -21,9 +21,9 @@ function Get-DotNetProjectDirectory
     $RootPath
   )
 
-  # We don't search for project.json because that gets copied around. .xproj is the only
+  # We don't search for project.json because that gets copied around. .csproj is the only
   # good way to actually locate where the source project is.
-  Get-ChildItem -Path $RootPath -Recurse -Include "*.xproj" | Select-Object @{ Name="ParentFolder"; Expression={ $_.Directory.FullName.TrimEnd("\") } } | Select-Object -ExpandProperty ParentFolder
+  Get-ChildItem -Path $RootPath -Recurse -Include "*.csproj" | Select-Object @{ Name="ParentFolder"; Expression={ $_.Directory.FullName.TrimEnd("\") } } | Select-Object -ExpandProperty ParentFolder
 }
 
 <#
