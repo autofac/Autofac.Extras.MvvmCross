@@ -1,21 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0AF7FE58-6AC9-41E3-817D-8251DB8C5629}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{86D4393C-A8B8-4C76-A456-5CD7886B670E}"
 	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
 		NuGet.Config = NuGet.Config
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Autofac.Extras.MvvmCross", "src\Autofac.Extras.MvvmCross\Autofac.Extras.MvvmCross.xproj", "{349D004B-2F89-4324-AC83-191EE32EB8C9}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{50FE960F-1D6B-45BD-A294-CE850789484B}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Autofac.Extras.MvvmCross.Test", "test\Autofac.Extras.MvvmCross.Test\Autofac.Extras.MvvmCross.Test.xproj", "{650A5A85-5956-491E-9312-5E25A27D1108}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autofac.Extras.MvvmCross", "src\Autofac.Extras.MvvmCross\Autofac.Extras.MvvmCross.csproj", "{5E26ED83-E85B-4DAF-BD22-CBE57B37ECB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Autofac.Extras.MvvmCross.Test", "test\Autofac.Extras.MvvmCross.Test\Autofac.Extras.MvvmCross.Test.csproj", "{88720BF8-F5DE-4EA7-B793-912AE0853C24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,20 +22,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{349D004B-2F89-4324-AC83-191EE32EB8C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{349D004B-2F89-4324-AC83-191EE32EB8C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{349D004B-2F89-4324-AC83-191EE32EB8C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{349D004B-2F89-4324-AC83-191EE32EB8C9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{650A5A85-5956-491E-9312-5E25A27D1108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{650A5A85-5956-491E-9312-5E25A27D1108}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{650A5A85-5956-491E-9312-5E25A27D1108}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{650A5A85-5956-491E-9312-5E25A27D1108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E26ED83-E85B-4DAF-BD22-CBE57B37ECB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E26ED83-E85B-4DAF-BD22-CBE57B37ECB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E26ED83-E85B-4DAF-BD22-CBE57B37ECB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E26ED83-E85B-4DAF-BD22-CBE57B37ECB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88720BF8-F5DE-4EA7-B793-912AE0853C24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88720BF8-F5DE-4EA7-B793-912AE0853C24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88720BF8-F5DE-4EA7-B793-912AE0853C24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88720BF8-F5DE-4EA7-B793-912AE0853C24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{349D004B-2F89-4324-AC83-191EE32EB8C9} = {0AF7FE58-6AC9-41E3-817D-8251DB8C5629}
-		{650A5A85-5956-491E-9312-5E25A27D1108} = {50FE960F-1D6B-45BD-A294-CE850789484B}
+		{5E26ED83-E85B-4DAF-BD22-CBE57B37ECB8} = {0AF7FE58-6AC9-41E3-817D-8251DB8C5629}
+		{88720BF8-F5DE-4EA7-B793-912AE0853C24} = {50FE960F-1D6B-45BD-A294-CE850789484B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DC39ADF8-1205-458F-AEAC-2F3735039E20}
 	EndGlobalSection
 EndGlobal

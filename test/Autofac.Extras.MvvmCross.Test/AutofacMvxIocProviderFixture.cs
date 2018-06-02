@@ -4,9 +4,9 @@ using System.Linq;
 using System.Reflection;
 using Autofac.Core;
 using Autofac.Core.Registration;
-using MvvmCross.Platform;
-using MvvmCross.Platform.Exceptions;
-using MvvmCross.Platform.IoC;
+using MvvmCross;
+using MvvmCross.Exceptions;
+using MvvmCross.IoC;
 using Xunit;
 
 namespace Autofac.Extras.MvvmCross.Test
@@ -109,7 +109,7 @@ namespace Autofac.Extras.MvvmCross.Test
                 InjectIntoProperties = MvxPropertyInjection.AllInterfaceProperties,
                 PropertyInjectionSelector = new DelegatePropertySelector((pi, obj) => pi.Name != "PropertyToSkip")
             };
-            var provider = new AutofacMvxIocProvider(builder.Build(), options);
+            var provider = new ChildAutofacMvxIocProvider(builder.Build(), options);
             this._disposables.Add(provider);
             provider.RegisterType(() => new Concrete());
             provider.RegisterType(typeof(Exception), () => new DivideByZeroException());
@@ -123,7 +123,7 @@ namespace Autofac.Extras.MvvmCross.Test
         public void PropertyInjectionCanBeEnabled()
         {
             var builder = new ContainerBuilder();
-            var provider = new AutofacMvxIocProvider(builder.Build(), new AutofacPropertyInjectorOptions { InjectIntoProperties = MvxPropertyInjection.AllInterfaceProperties });
+            var provider = new ChildAutofacMvxIocProvider(builder.Build(), new AutofacPropertyInjectorOptions { InjectIntoProperties = MvxPropertyInjection.AllInterfaceProperties });
             this._disposables.Add(provider);
             provider.RegisterType(() => new Concrete());
             provider.RegisterType(typeof(Exception), () => new DivideByZeroException());
@@ -383,6 +383,24 @@ namespace Autofac.Extras.MvvmCross.Test
             Assert.NotNull(obj);
             Assert.Null(obj.Dependency);
             Assert.Null(obj.MarkedDependency);
+        }
+
+        [Fact]
+        public void CanCreateChildContainers()
+        {
+            // Arrange
+            var rootContainer = CreateProvider();
+            rootContainer.RegisterType<IInterface, Concrete>();
+
+            // Act
+            var childContainer = rootContainer.CreateChildContainer();
+            childContainer.RegisterType<IInterface1, Concrete1>();
+
+            // Assert
+            Assert.True(childContainer.CanResolve<IInterface>());
+            Assert.True(childContainer.CanResolve<IInterface1>());
+            Assert.True(rootContainer.CanResolve<IInterface>());
+            Assert.False(rootContainer.CanResolve<IInterface1>());
         }
 
         // [Fact]
