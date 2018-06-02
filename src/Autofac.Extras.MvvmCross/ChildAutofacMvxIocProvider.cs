@@ -387,7 +387,9 @@ namespace Autofac.Extras.MvvmCross
             // You can't inject properties on a pre-constructed instance.
             cb.RegisterInstance(theObject).As(tInterface).AsSelf().SingleInstance();
 
+#pragma warning disable CS0618 // Type or member is obsolete. To be fixed as part of https://github.com/autofac/Autofac.Extras.MvvmCross/issues/8
             cb.Update(this.Container.ComponentRegistry);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -430,7 +432,9 @@ namespace Autofac.Extras.MvvmCross
                 this.SetPropertyInjection(regInterface);
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete. To be fixed as part of https://github.com/autofac/Autofac.Extras.MvvmCross/issues/8
             cb.Update(this.Container.ComponentRegistry);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -484,7 +488,9 @@ namespace Autofac.Extras.MvvmCross
                 this.SetPropertyInjection(x);
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete. To be fixed as part of https://github.com/autofac/Autofac.Extras.MvvmCross/issues/8
             cb.Update(this.Container.ComponentRegistry);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -520,7 +526,9 @@ namespace Autofac.Extras.MvvmCross
                 this.SetPropertyInjection(x);
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete. To be fixed as part of https://github.com/autofac/Autofac.Extras.MvvmCross/issues/8
             cb.Update(this.Container.ComponentRegistry);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -561,7 +569,9 @@ namespace Autofac.Extras.MvvmCross
                 this.SetPropertyInjection(x);
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete. To be fixed as part of https://github.com/autofac/Autofac.Extras.MvvmCross/issues/8
             cb.Update(this.Container.ComponentRegistry);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
