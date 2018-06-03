@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>Autofac extension supporting MvvmCross dependency injection.</Description>
-    <VersionPrefix>4.0.2</VersionPrefix>
+    <VersionPrefix>5.0.0</VersionPrefix>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -30,7 +30,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.8.1" />
+    <PackageReference Include="Autofac" Version="4.0.0-*" />
     <PackageReference Include="MvvmCross" Version="6.0.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
       <PrivateAssets>All</PrivateAssets>

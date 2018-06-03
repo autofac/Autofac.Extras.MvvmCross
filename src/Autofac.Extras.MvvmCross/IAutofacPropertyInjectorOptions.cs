@@ -1,8 +1,4 @@
-﻿// <copyright file="IAutofacPropertyInjectorOptions.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace Autofac.Extras.MvvmCross
+﻿namespace Autofac.Extras.MvvmCross
 {
     using Autofac.Core;
     using global::MvvmCross.IoC;
