@@ -1,6 +1,7 @@
 ﻿namespace Autofac.Extras.MvvmCross
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
@@ -300,6 +301,54 @@
         /// <summary>
         /// Resolves a service instance of a specified type.
         /// </summary>
+        /// <typeparam name="T">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </typeparam>
+        /// <param name="arguments">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <typeparamref name="T"/>.
+        /// </returns>
+        public virtual T IoCConstruct<T>(IDictionary<string, object> arguments)
+            where T : class
+        {
+            return (T)this.IoCConstruct(typeof(T), arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </typeparam>
+        /// <param name="arguments">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <typeparamref name="T"/>.
+        /// </returns>
+        public virtual T IoCConstruct<T>(params object[] arguments)
+            where T : class
+        {
+            return (T)this.IoCConstruct(typeof(T), arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </typeparam>
+        /// <param name="arguments">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <typeparamref name="T"/>.
+        /// </returns>
+        public virtual T IoCConstruct<T>(object arguments)
+            where T : class
+        {
+            return (T)this.IoCConstruct(typeof(T), arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
         /// <param name="type">
         /// The <see cref="System.Type"/> of the service to resolve.
         /// </param>
@@ -311,12 +360,63 @@
         /// </exception>
         public virtual object IoCConstruct(Type type)
         {
-            if (!this.Container.IsRegistered(type))
-            {
-                this.RegisterType(type, type);
-            }
+            return this.IoCConstruct(type, new Parameter[0]);
+        }
 
-            return this.Resolve(type);
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// /// <param name="arguments">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public virtual object IoCConstruct(Type type, IDictionary<string, object> arguments)
+        {
+            return this.IoCConstruct(type, arguments.Select(x => new NamedParameter(x.Key, x.Value)));
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// /// <param name="arguments">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public virtual object IoCConstruct(Type type, object arguments)
+        {
+            throw new NotImplementedException();
+
+            // TODO: Implement a object-to-dictionary converter like RouteValuesDictionary in ASP.NET Core.
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// /// <param name="arguments">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public virtual object IoCConstruct(Type type, params object[] arguments)
+        {
+            return this.IoCConstruct(type, arguments.Select((x, i) => new PositionalParameter(i, x)));
         }
 
         /// <summary>
@@ -599,19 +699,43 @@
         /// </exception>
         public virtual object Resolve(Type type)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
+            return this.Resolve(type, new Parameter[0]);
+        }
 
-            try
-            {
-                return this.Container.Resolve(type);
-            }
-            catch (DependencyResolutionException ex)
-            {
-                throw new MvxIoCResolveException(ex, "Could not resolve {0}. See InnerException for details", type.FullName);
-            }
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// <param name="parameters">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public virtual object Resolve(Type type, IDictionary<string, object> parameters)
+        {
+            return this.Resolve(type, parameters.Select(x => new NamedParameter(x.Key, x.Value)));
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// <param name="parameters">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public virtual object Resolve(Type type, IEnumerable<object> parameters)
+        {
+            return this.Resolve(type, parameters.Select((x, i) => new PositionalParameter(i, x)));
         }
 
         /// <summary>
@@ -713,6 +837,59 @@
             else
             {
                 registration.PropertiesAutowired(options.PropertyInjectionSelector);
+            }
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// <param name="arguments">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual object IoCConstruct(Type type, params Parameter[] arguments)
+        {
+            if (!this.Container.IsRegistered(type))
+            {
+                this.RegisterType(type, type);
+            }
+
+            return this.Resolve(type, arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// <param name="parameters">A list of constructor arguments.</param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual object Resolve(Type type, IEnumerable<Parameter> parameters)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            try
+            {
+                return this.Container.Resolve(type, parameters);
+            }
+            catch (DependencyResolutionException ex)
+            {
+                throw new MvxIoCResolveException(ex, "Could not resolve {0}. See InnerException for details", type.FullName);
             }
         }
 

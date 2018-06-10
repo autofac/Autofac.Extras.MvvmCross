@@ -1,6 +1,7 @@
 ﻿namespace Autofac.Extras.MvvmCross
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using Autofac.Builder;
     using Autofac.Core;
@@ -269,6 +270,129 @@
         public virtual object IoCConstruct(Type type)
         {
             return this.provider.IoCConstruct(type);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </typeparam>
+        /// <param name="arguments">
+        /// The constructor arguments.
+        /// </param>
+        /// <returns>
+        /// The resolved instance of type <typeparamref name="T"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <typeparamref name="T"/> is <see langword="null"/>.
+        /// </exception>
+        public T IoCConstruct<T>(IDictionary<string, object> arguments)
+            where T : class
+        {
+            return this.provider.IoCConstruct<T>(arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </typeparam>
+        /// <param name="arguments">
+        /// The constructor arguments.
+        /// </param>
+        /// <returns>
+        /// The resolved instance of type <typeparamref name="T"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <typeparamref name="T"/> is <see langword="null"/>.
+        /// </exception>
+        public T IoCConstruct<T>(object arguments)
+            where T : class
+        {
+            return this.provider.IoCConstruct<T>(arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </typeparam>
+        /// <param name="arguments">
+        /// The constructor arguments.
+        /// </param>
+        /// <returns>
+        /// The resolved instance of type <typeparamref name="T"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <typeparamref name="T"/> is <see langword="null"/>.
+        /// </exception>
+        public T IoCConstruct<T>(params object[] arguments)
+            where T : class
+        {
+            return this.provider.IoCConstruct<T>(arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// <param name="arguments">
+        /// The constructor arguments.
+        /// </param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public object IoCConstruct(Type type, IDictionary<string, object> arguments)
+        {
+            return this.provider.IoCConstruct(type, arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// <param name="arguments">
+        /// The constructor arguments.
+        /// </param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public object IoCConstruct(Type type, object arguments)
+        {
+            return this.provider.IoCConstruct(type, arguments);
+        }
+
+        /// <summary>
+        /// Resolves a service instance of a specified type.
+        /// </summary>
+        /// <param name="type">
+        /// The <see cref="System.Type"/> of the service to resolve.
+        /// </param>
+        /// <param name="arguments">
+        /// The constructor arguments.
+        /// </param>
+        /// <returns>
+        /// The resolved instance of type <paramref name="type"/>.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public object IoCConstruct(Type type, params object[] arguments)
+        {
+            return this.provider.IoCConstruct(type, arguments);
         }
 
         /// <summary>
