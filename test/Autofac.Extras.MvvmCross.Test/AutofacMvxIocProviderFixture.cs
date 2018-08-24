@@ -272,7 +272,7 @@ namespace Autofac.Extras.MvvmCross.Test
             Mvx.RegisterType<IInterface2, Concrete2>();
 
             // Act
-            var obj = Mvx.IocConstruct<HasDependantProperty>();
+            var obj = Mvx.IoCProvider.IoCConstruct<HasDependantProperty>();
 
             // Assert
             Assert.NotNull(obj);
@@ -293,7 +293,7 @@ namespace Autofac.Extras.MvvmCross.Test
             Mvx.RegisterType<IInterface2, Concrete2>();
 
             // Act
-            var obj = Mvx.IocConstruct<HasDependantProperty>();
+            var obj = Mvx.IoCProvider.IoCConstruct<HasDependantProperty>();
 
             // Assert
             Assert.NotNull(obj);
@@ -312,7 +312,7 @@ namespace Autofac.Extras.MvvmCross.Test
                 });
             Mvx.RegisterType<IInterface1, Concrete1>();
             Mvx.RegisterType<IInterface2, Concrete2>();
-            Mvx.RegisterSingleton<IHasDependantProperty>(Mvx.IocConstruct<HasDependantProperty>);
+            Mvx.RegisterSingleton<IHasDependantProperty>(Mvx.IoCProvider.IoCConstruct<HasDependantProperty>);
 
             // Act
             var obj = Mvx.Resolve<IHasDependantProperty>();
@@ -336,7 +336,7 @@ namespace Autofac.Extras.MvvmCross.Test
             Mvx.RegisterType<IInterface2, Concrete2>();
 
             // Act
-            var obj = Mvx.IocConstruct<HasDependantProperty>();
+            var obj = Mvx.IoCProvider.IoCConstruct<HasDependantProperty>();
 
             // Assert
             Assert.NotNull(obj);
@@ -355,7 +355,7 @@ namespace Autofac.Extras.MvvmCross.Test
             });
             Mvx.RegisterType<IInterface1, Concrete1>();
             Mvx.RegisterType<IInterface2, Concrete2>();
-            Mvx.RegisterSingleton<IHasDependantProperty>(Mvx.IocConstruct<HasDependantProperty>);
+            Mvx.RegisterSingleton<IHasDependantProperty>(Mvx.IoCProvider.IoCConstruct<HasDependantProperty>);
 
             // Act
             var obj = Mvx.Resolve<IHasDependantProperty>();
@@ -377,7 +377,7 @@ namespace Autofac.Extras.MvvmCross.Test
                 });
 
             // Act
-            var obj = Mvx.IocConstruct<HasDependantProperty>();
+            var obj = Mvx.IoCProvider.IoCConstruct<HasDependantProperty>();
 
             // Assert
             Assert.NotNull(obj);
