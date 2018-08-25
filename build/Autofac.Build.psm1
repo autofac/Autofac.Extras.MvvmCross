@@ -47,7 +47,7 @@ function Install-DotNetCli
   }
 
   # Run the dotnet CLI install
-  & .\.dotnet\dotnet-install.ps1
+  & .\.dotnet\dotnet-install.ps1 -Channel Current
 
   # Add the dotnet folder path to the process.
   Remove-EnvironmentPathEntry $env:DOTNET_INSTALL_DIR
