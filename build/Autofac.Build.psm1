@@ -6,6 +6,26 @@
 
 <#
  .SYNOPSIS
+  Writes a build progress message to the host.
+
+ .PARAMETER Message
+  The message to write.
+#>
+function Write-Message
+{
+  [CmdletBinding()]
+  Param(
+    [Parameter(Mandatory=$True, ValueFromPipeline=$False, ValueFromPipelineByPropertyName=$False)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $Message
+  )
+
+  Write-Host "[BUILD] $Message" -ForegroundColor Cyan
+}
+
+<#
+ .SYNOPSIS
   Gets the set of directories in which projects are available for compile/processing.
 
  .PARAMETER RootPath
@@ -21,37 +41,53 @@ function Get-DotNetProjectDirectory
     $RootPath
   )
 
-  # We don't search for project.json because that gets copied around. .csproj is the only
-  # good way to actually locate where the source project is.
   Get-ChildItem -Path $RootPath -Recurse -Include "*.csproj" | Select-Object @{ Name="ParentFolder"; Expression={ $_.Directory.FullName.TrimEnd("\") } } | Select-Object -ExpandProperty ParentFolder
 }
 
 <#
  .SYNOPSIS
-  Runs the dotnet CLI RC2 install script from GitHub to install a project-local
+  Runs the dotnet CLI install script from GitHub to install a project-local
   copy of the CLI.
 #>
 function Install-DotNetCli
 {
-  $callerPath = Split-Path $MyInvocation.PSCommandPath
-  $env:DOTNET_INSTALL_DIR = Join-Path -Path $callerPath -ChildPath ".dotnet\cli"
-  if (!(Test-Path $env:DOTNET_INSTALL_DIR))
+  [CmdletBinding()]
+  Param(
+    [string]
+    $Version = "Latest"
+  )
+
+  if ((Get-Command "dotnet.exe" -ErrorAction SilentlyContinue) -ne $null)
   {
-    New-Item -ItemType Directory -Path "$($env:DOTNET_INSTALL_DIR)" | Out-Null
+    $installedVersion = dotnet --version
+    if ($installedVersion -eq $Version)
+    {
+      Write-Message ".NET Core SDK version $Version is already installed"
+      return;
+    }
+  }
+
+  $callerPath = Split-Path $MyInvocation.PSCommandPath
+  $installDir = Join-Path -Path $callerPath -ChildPath ".dotnet\cli"
+  if (!(Test-Path $installDir))
+  {
+    New-Item -ItemType Directory -Path "$installDir" | Out-Null
   }
 
   # Download the dotnet CLI install script
   if (!(Test-Path .\dotnet\install.ps1))
   {
+    # PowerShell 5.1 defaults to SSL3/TLS and blocks TLS 1.1/1.2
+    # http://wahlnetwork.com/2018/01/08/supporting-tls-v1-2-powershell-securityprotocoltype/
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]'Ssl3,Tls,Tls11,Tls12'
     Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
   }
 
   # Run the dotnet CLI install
-  & .\.dotnet\dotnet-install.ps1 -Channel Current
+  & .\.dotnet\dotnet-install.ps1 -InstallDir "$installDir" -Version $Version
 
   # Add the dotnet folder path to the process.
-  Remove-EnvironmentPathEntry $env:DOTNET_INSTALL_DIR
-  $env:PATH = "$env:DOTNET_INSTALL_DIR;$env:PATH"
+  $env:PATH = "$installDir;$env:PATH"
 }
 
 <#
@@ -76,7 +112,7 @@ function Invoke-DotNetBuild
     foreach($Project in $ProjectDirectory)
     {
       & dotnet build ("""" + $Project.FullName + """") --configuration Release
-      if($LASTEXITCODE -ne 0)
+      if ($LASTEXITCODE -ne 0)
       {
         exit 1
       }
@@ -93,6 +129,9 @@ function Invoke-DotNetBuild
 
  .PARAMETER PackagesPath
   Path to the "artifacts\packages" folder where packages should go.
+
+ .PARAMETER VersionSuffix
+  The version suffix to use for the NuGet package version.
 #>
 function Invoke-DotNetPack
 {
@@ -106,7 +145,12 @@ function Invoke-DotNetPack
     [Parameter(Mandatory=$True, ValueFromPipeline=$False)]
     [ValidateNotNull()]
     [System.IO.DirectoryInfo]
-    $PackagesPath
+    $PackagesPath,
+
+    [Parameter(Mandatory=$True, ValueFromPipeline=$False)]
+    [AllowEmptyString()]
+    [string]
+    $VersionSuffix = ""
   )
   Begin
   {
@@ -116,9 +160,28 @@ function Invoke-DotNetPack
   {
     foreach($Project in $ProjectDirectory)
     {
-      & dotnet build ("""" + $Project.FullName + """") --configuration Release
-      & dotnet pack ("""" + $Project.FullName + """") --configuration Release --output $PackagesPath
-      if($LASTEXITCODE -ne 0)
+      if ($VersionSuffix -eq "")
+      {
+        & dotnet build ("""" + $Project.FullName + """") --configuration Release
+      }
+      else
+      {
+        & dotnet build ("""" + $Project.FullName + """") --configuration Release --version-suffix $VersionSuffix
+      }
+      if ($LASTEXITCODE -ne 0)
+      {
+        exit 1
+      }
+
+      if ($VersionSuffix -eq "")
+      {
+        & dotnet pack ("""" + $Project.FullName + """") --configuration Release --output $PackagesPath
+      }
+      else
+      {
+        & dotnet pack ("""" + $Project.FullName + """") --configuration Release --version-suffix $VersionSuffix --output $PackagesPath
+      }
+      if ($LASTEXITCODE -ne 0)
       {
         exit 1
       }
@@ -146,34 +209,18 @@ function Invoke-Test
   {
     foreach($Project in $ProjectDirectory)
     {
-      & dotnet test ("""" + $Project.FullName + """")
-      if($LASTEXITCODE -ne 0)
+      Push-Location $Project
+
+      & dotnet test --configuration Release --logger:trx
+      if ($LASTEXITCODE -ne 0)
       {
+        Pop-Location
         exit 3
       }
+
+      Pop-Location
     }
   }
-}
-
-<#
-.SYNOPSIS
-    Removes a path entry from the current user and process path.
-.DESCRIPTION
-    Updates the user and process paths as needed to remove a specific path
-    from the overall search path.
-.PARAMETER VariableToRemove
-    The directory/path that should be removed.
-#>
-function Remove-EnvironmentPathEntry
-{
-  [cmdletbinding()]
-  param([string] $VariableToRemove)
-  $path = [Environment]::GetEnvironmentVariable("PATH", "User")
-  $newItems = $path.Split(';') | Where-Object { $_.ToString() -inotlike $VariableToRemove }
-  [Environment]::SetEnvironmentVariable("PATH", [System.String]::Join(';', $newItems), "User")
-  $path = [Environment]::GetEnvironmentVariable("PATH", "Process")
-  $newItems = $path.Split(';') | Where-Object { $_.ToString() -inotlike $VariableToRemove }
-  [Environment]::SetEnvironmentVariable("PATH", [System.String]::Join(';', $newItems), "Process")
 }
 
 <#
