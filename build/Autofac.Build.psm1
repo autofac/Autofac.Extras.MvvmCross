@@ -21,9 +21,9 @@ function Get-DotNetProjectDirectory
     $RootPath
   )
 
-  # We don't search for project.json because that gets copied around. .xproj is the only
+  # We don't search for project.json because that gets copied around. .csproj is the only
   # good way to actually locate where the source project is.
-  Get-ChildItem -Path $RootPath -Recurse -Include "*.xproj" | Select-Object @{ Name="ParentFolder"; Expression={ $_.Directory.FullName.TrimEnd("\") } } | Select-Object -ExpandProperty ParentFolder
+  Get-ChildItem -Path $RootPath -Recurse -Include "*.csproj" | Select-Object @{ Name="ParentFolder"; Expression={ $_.Directory.FullName.TrimEnd("\") } } | Select-Object -ExpandProperty ParentFolder
 }
 
 <#
@@ -43,11 +43,11 @@ function Install-DotNetCli
   # Download the dotnet CLI install script
   if (!(Test-Path .\dotnet\install.ps1))
   {
-    Invoke-WebRequest "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2/scripts/obtain/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
+    Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
   }
 
   # Run the dotnet CLI install
-  & .\.dotnet\dotnet-install.ps1
+  & .\.dotnet\dotnet-install.ps1 -Channel Current
 
   # Add the dotnet folder path to the process.
   Remove-EnvironmentPathEntry $env:DOTNET_INSTALL_DIR
