@@ -1,11 +1,1 @@
-Try StackOverflow! If you have a _usage question_ ("How do I...?" "Others have this working but I can't get it...") please try [StackOverflow](https://stackoverflow.com) and tag your question `autofac`. We, along with a great community, monitor those questions.
-
-**Have you [read the docs?](https://autofac.readthedocs.io/)**
-
-**This repo is for Autofac.Extras.MvvmCross only.** If you are encountering issues with another package (MVC, Web API, etc.) or core Autofac, please file it in the appropriate repo. Thanks!
-
-**When filing an issue, please include:**
-
-- Assembly version information for _all_ project dependencies (packages.config, project.json)
-- The stack trace and message of any exception(s) encountered.
-- If possible, a reproduction of the issue (ideally in a unit test form).
+**MAINTENANCE MODE**: This package is in maintenance-only mode. No new bug fixes or features will be added. If you would like to become an owner for this package and take responsibility for maintaining it, [visit us on the Google Groups and let us know](https://groups.google.com/forum/#!forum/autofac).
